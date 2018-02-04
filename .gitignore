@@ -1,0 +1,15 @@
+*.iml
+.gradle
+.idea/
+.nb-gradle/
+projectFilesBackup/
+/local.properties
+/gradle.properties
+/.idea/workspace.xml
+/.idea/libraries
+.DS_Store
+/build
+/captures
+release/
+.externalNativeBuild
+google-services.json

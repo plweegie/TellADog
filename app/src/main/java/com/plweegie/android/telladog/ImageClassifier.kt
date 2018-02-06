@@ -14,6 +14,7 @@ import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 
 class ImageClassifier @Throws(IOException::class) constructor(val mActivity: Activity) {
@@ -46,17 +47,17 @@ class ImageClassifier @Throws(IOException::class) constructor(val mActivity: Act
         Log.d(TAG, "Created a Tensorflow Lite Image Classifier.")
     }
 
-    fun classifyFrame(bitmap: Bitmap): String {
+    fun getPredictions(bitmap: Bitmap): List<Pair<String, Float>>? {
         if (tflite == null) {
             Log.e(TAG, "Image classifier has not been initialized; Skipped.")
-            return "Uninitialized classifier"
+            return null
         }
 
         convertBitmapToByteBuffer(bitmap)
         tflite?.run(imgData, labelProbArray)
         applyFilter()
 
-        return printTopKLabels()
+        return getTopKLabels()
     }
 
     private fun applyFilter() {
@@ -127,7 +128,7 @@ class ImageClassifier @Throws(IOException::class) constructor(val mActivity: Act
         }
     }
 
-    private fun printTopKLabels(): String {
+    private fun getTopKLabels(): List<Pair<String, Float>> {
         for (i in 0 until labelList.size) {
             sortedLabels.add(
                     AbstractMap.SimpleEntry(labelList[i], labelProbArray[0][i]))
@@ -135,13 +136,16 @@ class ImageClassifier @Throws(IOException::class) constructor(val mActivity: Act
                 sortedLabels.poll()
             }
         }
-        var textToShow = ""
+
+        val mapToOutput = HashMap<String, Float>()
         val size = sortedLabels.size
         for (i in 0 until size) {
             val label = sortedLabels.poll()
-            textToShow = String.format("%s", label.key) + textToShow
+            mapToOutput[label.key] = label.value
         }
-        return textToShow
+
+        return mapToOutput.toList()
+                .sortedByDescending { (k, v) -> v }
     }
 
 
@@ -150,7 +154,7 @@ class ImageClassifier @Throws(IOException::class) constructor(val mActivity: Act
         private const val MODEL_PATH = "dog_optimized_graph.lite"
         private const val LABEL_PATH = "dog_labels.txt"
 
-        private const val RESULTS_TO_SHOW = 1
+        private const val RESULTS_TO_SHOW = 3
         private const val DIM_BATCH_SIZE = 1
         private const val DIM_PIXEL_SIZE = 3
 

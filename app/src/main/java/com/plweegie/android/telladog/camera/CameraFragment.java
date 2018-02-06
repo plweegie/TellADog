@@ -67,8 +67,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.SortedMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+
+import kotlin.Pair;
 
 
 public class CameraFragment extends Fragment implements FragmentCompat.OnRequestPermissionsResultCallback {
@@ -559,9 +563,9 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
         }
         Bitmap bitmap =
                 textureView.getBitmap(ImageClassifier.DIM_IMG_SIZE_X, ImageClassifier.DIM_IMG_SIZE_Y);
-        String textToShow = classifier.classifyFrame(bitmap);
+        List<Pair<String, Float>> predictions = classifier.getPredictions(bitmap);
         bitmap.recycle();
-        showToast(textToShow);
+        showToast(predictions.get(0).getFirst());
     }
 
     /** Compares two {@code Size}s based on their areas. */

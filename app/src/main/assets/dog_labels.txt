@@ -1,120 +1,120 @@
-miniature poodle
-giant schnauzer
-cairn
-toy poodle
-chesapeake bay retriever
-gordon setter
-borzoi
-brittany spaniel
-irish wolfhound
-english setter
-ibizan hound
-french bulldog
-bernese mountain dog
-german shepherd
-border terrier
-english foxhound
-black and tan coonhound
-english springer
-chihuahua
-old english sheepdog
-australian terrier
-maltese
-collie
-briard
-bedlington terrier
-afghan hound
-airedale
-keeshond
-boston bull
-irish setter
-standard schnauzer
-pug
-irish terrier
-great dane
-newfoundland
-norfolk terrier
-golden retriever
-lakeland terrier
-greater swiss mountain dog
-weimaraner
-norwegian elkhound
-malamute
-bouvier des flandres
-scottish deerhound
-cocker spaniel
-irish water spaniel
-kelpie
-papillon
-basset
-saint bernard
-blenheim spaniel
-great pyrenees
-rhodesian ridgeback
-treeing walker coonhound
-beagle
-basenji
-scotch terrier
-welsh springer spaniel
-komondor
-african hunting dog
-labrador retriever
-chow chow
-dhole
-soft coated wheaten terrier
-standard poodle
-flat coated retriever
-boxer
-toy terrier
-siberian husky
-west highland white terrier
-eskimo dog
-appenzeller
-yorkshire terrier
-staffordshire bullterrier
-schipperke
-tibetan mastiff
-silky terrier
-border collie
-bluetick coonhound
-italian greyhound
-lhasa
-otterhound
-bloodhound
-affenpinscher
-pomeranian
-leonberg
-miniature pinscher
-wire haired fox terrier
-curly coated retriever
-pekingese
-groenendael
-german short
-brabancon griffon
-clumber
-saluki
-rottweiler
-entlebucher
-pembroke
-redbone coonhound
-kerry blue terrier
-japanese chin
-vizsla
-norwich terrier
-kuvasz
-whippet
-tibetan terrier
-sussex spaniel
-dingo
-doberman
-bull mastiff
-samoyed
-malinois
-cardigan
-mexican hairless
-miniature schnauzer
-dandie dinmont
-shih tzu
-sealyham terrier
-shetland sheepdog
-american staffordshire terrier
+Miniature Poodle
+Giant Schnauzer
+Cairn Terrier
+Toy Poodle
+Chesapeake Bay Retriever
+Gordon Setter
+Borzoi
+Brittany Spaniel
+Irish Wolfhound
+English Setter
+Ibizan Hound
+French Bulldog
+Bernese Mountain Dog
+German Shepherd
+Border Terrier
+English Foxhound
+Black and Tan Coonhound
+English Springer Spaniel
+Chihuahua
+Old English Sheepdog
+Australian Terrier
+Maltese
+Collie
+Briard
+Bedlington Terrier
+Afghan Hound
+Airedale Terrier
+Keeshond
+Boston Terrier
+Irish Setter
+Standard Schnauzer
+Pug
+Irish Terrier
+Great Dane
+Newfoundland
+Norfolk Terrier
+Golden Retriever
+Lakeland Terrier
+Greater Swiss Mountain Dog
+Weimaraner
+Norwegian Elkhound
+Alaskan Malamute
+Bouvier des Flandres
+Scottish Deerhound
+Cocker Spaniel
+Irish Water Spaniel
+Kelpie
+Papillon
+Basset Hound
+Saint Bernard
+Blenheim Spaniel
+Great Pyrenees
+Rhodesian Ridgeback
+Treeing Walker Coonhound
+Beagle
+Basenji
+Scotch Terrier
+Welsh Springer Spaniel
+Komondor
+African Hunting Dog
+Labrador Retriever
+Chow Chow
+Dhole
+Soft coated Wheaten Terrier
+Standard Poodle
+Flat coated Retriever
+Boxer
+Toy Terrier
+Siberian Husky
+West Highland White Terrier
+Eskimo Dog
+Appenzeller
+Yorkshire Terrier
+Staffordshire Bull Terrier
+Schipperke
+Tibetan Mastiff
+Silky Terrier
+Border Collie
+Bluetick Coonhound
+Italian Greyhound
+Lhasa Apso
+Otterhound
+Bloodhound
+Affenpinscher
+Pomeranian
+Leonberger
+Miniature Pinscher
+Wire haired Fox Terrier
+Curly coated Retriever
+Pekingese
+Groenendael
+German Short haired Pointer
+Brabancon Griffon
+Clumber Spaniel
+Saluki
+Rottweiler
+Entlebucher
+Pembroke Welsh Corgi
+Redbone Coonhound
+Kerry Blue Terrier
+Japanese Chin
+Vizsla
+Norwich Terrier
+Kuvasz
+Whippet
+Tibetan Terrier
+Sussex Spaniel
+Dingo
+Doberman
+Bull Mastiff
+Samoyed
+Malinois
+Cardigan Welsh Corgi
+Mexican Hairless
+Miniature Schnauzer
+Dandie Dinmont Terrier
+Shih Tzu
+Sealyham Terrier
+Shetland Sheepdog
+American Staffordshire Terrier

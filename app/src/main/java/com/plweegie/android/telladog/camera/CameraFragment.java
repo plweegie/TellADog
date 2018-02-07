@@ -49,6 +49,8 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.util.Size;
 import android.view.LayoutInflater;
@@ -59,6 +61,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.plweegie.android.telladog.ImageClassifier;
+import com.plweegie.android.telladog.InferenceAdapter;
 import com.plweegie.android.telladog.R;
 
 import java.io.IOException;
@@ -90,7 +93,8 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
     private boolean checkedPermissions = false;
     private TextView textView;
     private ImageClassifier classifier;
-
+    private RecyclerView recyclerView;
+    private InferenceAdapter adapter;
 
     private final TextureView.SurfaceTextureListener surfaceTextureListener =
             new TextureView.SurfaceTextureListener() {
@@ -195,6 +199,18 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
         }
     }
 
+    private void updateAdapterAsync(final List<Pair<String, Float>> predictions) {
+        final Activity activity = getActivity();
+        if (activity != null) {
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    adapter.setPredictions(predictions);
+                }
+            });
+        }
+    }
+
     public static CameraFragment newInstance() {
         return new CameraFragment();
     }
@@ -203,6 +219,8 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
     @Override
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
+        adapter = new InferenceAdapter(getActivity());
         return inflater.inflate(R.layout.fragment_camera, container, false);
     }
 
@@ -211,6 +229,22 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
     public void onViewCreated(final View view, Bundle savedInstanceState) {
         textureView = (AutoFitTextureView) view.findViewById(R.id.texture);
         textView = (TextView) view.findViewById(R.id.text);
+
+        recyclerView = view.findViewById(R.id.inference_rv);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+
+        textView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (recyclerView.getVisibility() != View.VISIBLE) {
+                    recyclerView.setAdapter(adapter);
+                    recyclerView.setVisibility(View.VISIBLE);
+                } else {
+                    recyclerView.setAdapter(null);
+                    recyclerView.setVisibility(View.GONE);
+                }
+            }
+        });
     }
 
     /** Load the model and labels. */
@@ -565,7 +599,9 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
                 textureView.getBitmap(ImageClassifier.DIM_IMG_SIZE_X, ImageClassifier.DIM_IMG_SIZE_Y);
         List<Pair<String, Float>> predictions = classifier.getPredictions(bitmap);
         bitmap.recycle();
+
         showToast(predictions.get(0).getFirst());
+        updateAdapterAsync(predictions);
     }
 
     /** Compares two {@code Size}s based on their areas. */

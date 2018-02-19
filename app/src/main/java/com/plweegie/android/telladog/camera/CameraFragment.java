@@ -233,15 +233,22 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
         recyclerView = view.findViewById(R.id.inference_rv);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
+        textureView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (recyclerView.getVisibility() == View.VISIBLE) {
+                    recyclerView.setAdapter(null);
+                    recyclerView.setVisibility(View.GONE);
+                }
+            }
+        });
+
         textView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (recyclerView.getVisibility() != View.VISIBLE) {
                     recyclerView.setAdapter(adapter);
                     recyclerView.setVisibility(View.VISIBLE);
-                } else {
-                    recyclerView.setAdapter(null);
-                    recyclerView.setVisibility(View.GONE);
                 }
             }
         });

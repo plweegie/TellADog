@@ -233,16 +233,6 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
         recyclerView = view.findViewById(R.id.inference_rv);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
-        textureView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (recyclerView.getVisibility() == View.VISIBLE) {
-                    recyclerView.setAdapter(null);
-                    recyclerView.setVisibility(View.GONE);
-                }
-            }
-        });
-
         textView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -511,6 +501,16 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
         try {
             SurfaceTexture texture = textureView.getSurfaceTexture();
             assert texture != null;
+
+            textureView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (recyclerView.getVisibility() == View.VISIBLE) {
+                        recyclerView.setAdapter(null);
+                        recyclerView.setVisibility(View.GONE);
+                    }
+                }
+            });
 
             // We configure the size of default buffer to be the size of camera preview we want.
             texture.setDefaultBufferSize(previewSize.getWidth(), previewSize.getHeight());

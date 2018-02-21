@@ -7,4 +7,5 @@
     <string name="toggle_turn_on">NN:On</string>
     <string name="toggle_turn_off">NN:Off</string>
     <string name="toggle">Use NNAPI</string>
+    <string name="no_dogs_here">Not seeing any dogs...</string>
 </resources>

@@ -607,7 +607,12 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
         List<Pair<String, Float>> predictions = classifier.getPredictions(bitmap);
         bitmap.recycle();
 
-        showToast(predictions.get(0).getFirst());
+        if (predictions.get(0).getSecond() < 0.40) {
+            showToast(getString(R.string.no_dogs_here));
+        } else {
+            showToast(predictions.get(0).getFirst());
+        }
+
         updateAdapterAsync(predictions);
     }
 

@@ -27,13 +27,13 @@ class InferenceAdapter(val context: Context) : RecyclerView.Adapter<InferenceAda
 
     private var mLabels: MutableList<Pair<String, Float>>  = mutableListOf()
 
-    override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): InferenceHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): InferenceHolder {
         val inflater = LayoutInflater.from(context)
         return InferenceHolder(inflater, parent, R.layout.inference_list_item)
     }
 
-    override fun onBindViewHolder(holder: InferenceHolder?, position: Int) {
-        holder?.bind(mLabels[position])
+    override fun onBindViewHolder(holder: InferenceHolder, position: Int) {
+        holder.bind(mLabels[position])
     }
 
     override fun getItemCount(): Int = mLabels.size

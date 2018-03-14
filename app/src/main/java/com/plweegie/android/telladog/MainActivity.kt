@@ -2,7 +2,7 @@ package com.plweegie.android.telladog
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import com.plweegie.android.telladog.camera.CameraFragment
+import com.plweegie.android.telladog.ui.DogListFragment
 
 class MainActivity : AppCompatActivity() {
 
@@ -13,7 +13,7 @@ class MainActivity : AppCompatActivity() {
         var fragment = supportFragmentManager.findFragmentById(R.id.container)
 
         if (fragment == null) {
-            fragment = CameraFragment.newInstance()
+            fragment = DogListFragment.newInstance()
             supportFragmentManager.beginTransaction()
                     .replace(R.id.container, fragment)
                     .commit()

@@ -41,6 +41,8 @@ class ImageClassifier @Throws(IOException::class) constructor(val mActivity: Act
     private var tflite: Interpreter? = null
     private var labelList: MutableList<String>
 
+    lateinit var imgUrl: String
+
     private var imgData: ByteBuffer
 
     private var labelProbArray: Array<FloatArray>

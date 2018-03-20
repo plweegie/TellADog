@@ -33,6 +33,8 @@ import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentActivity
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.FileProvider
+import android.support.v7.widget.GridLayoutManager
+import android.support.v7.widget.LinearLayoutManager
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -40,6 +42,7 @@ import android.view.ViewGroup
 import com.plweegie.android.telladog.ImageClassifier
 import com.plweegie.android.telladog.MyApp
 import com.plweegie.android.telladog.R
+import com.plweegie.android.telladog.adapters.PhotoGridAdapter
 import com.plweegie.android.telladog.data.DogPrediction
 import com.plweegie.android.telladog.data.PredictionRepository
 import com.plweegie.android.telladog.viewmodels.PredictionListViewModel
@@ -62,6 +65,7 @@ class DogListFragment : Fragment() {
 
     private lateinit var mViewModel: PredictionListViewModel
     private lateinit var mClassifier: ImageClassifier
+    private lateinit var mAdapter: PhotoGridAdapter
 
     private var mClassifierThread: HandlerThread? = null
     private var mClassifierHandler: Handler? = null
@@ -77,19 +81,26 @@ class DogListFragment : Fragment() {
         super.onCreate(savedInstanceState)
         mViewModel = ViewModelProviders.of(activity as FragmentActivity, mViewModelFactory)
                 .get(PredictionListViewModel::class.java)
+
+        mAdapter = PhotoGridAdapter()
+        mAdapter.setHasStableIds(true)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val view = inflater.inflate(R.layout.fragment_dog_list, container, false)
-
-        mViewModel.getPredictionList()?.observe(this, Observer {
-            Log.d("dogs", it?.size.toString())
-        })
-
-        return view
-    }
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
+            inflater.inflate(R.layout.fragment_dog_list, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        val llm = LinearLayoutManager(activity)
+        predictions_list.layoutManager = llm
+        predictions_list.setHasFixedSize(true)
+        predictions_list.adapter = mAdapter
+
+        mViewModel.getPredictionList().observe(this, Observer {
+            if (it != null) {
+                mAdapter.setContent(it)
+            }
+        })
+
         take_photo_fab.setOnClickListener {
             if (!mCheckedPermissions && !allPermissionsGranted()) {
                 requestPermissions(getRequiredPermissions(), REQUEST_PERMISSIONS)

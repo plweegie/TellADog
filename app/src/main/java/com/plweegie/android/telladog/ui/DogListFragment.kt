@@ -33,6 +33,7 @@ import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentActivity
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.FileProvider
+import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
 import android.util.Log
 import android.view.LayoutInflater
@@ -89,8 +90,8 @@ class DogListFragment : Fragment() {
             inflater.inflate(R.layout.fragment_dog_list, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val llm = LinearLayoutManager(activity)
-        predictions_list.layoutManager = llm
+        val layoutManager = GridLayoutManager(activity, 2)
+        predictions_list.layoutManager = layoutManager
         predictions_list.setHasFixedSize(true)
         predictions_list.adapter = mAdapter
 

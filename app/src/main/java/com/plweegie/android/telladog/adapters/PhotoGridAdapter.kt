@@ -6,7 +6,6 @@ import android.view.ViewGroup
 import com.plweegie.android.telladog.R
 import com.plweegie.android.telladog.data.DogPrediction
 import kotlinx.android.synthetic.main.grid_item.view.*
-import kotlinx.android.synthetic.main.list_item.view.*
 
 
 class PhotoGridAdapter : RecyclerView.Adapter<PhotoGridAdapter.PhotoGridHolder>() {
@@ -15,7 +14,7 @@ class PhotoGridAdapter : RecyclerView.Adapter<PhotoGridAdapter.PhotoGridHolder>(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PhotoGridHolder {
         val inflater = LayoutInflater.from(parent.context)
-        return PhotoGridHolder(inflater, parent, R.layout.list_item)
+        return PhotoGridHolder(inflater, parent, R.layout.grid_item)
     }
 
     override fun onBindViewHolder(holder: PhotoGridHolder, position: Int) {
@@ -35,8 +34,8 @@ class PhotoGridAdapter : RecyclerView.Adapter<PhotoGridAdapter.PhotoGridHolder>(
             RecyclerView.ViewHolder(inflater.inflate(layoutResId, parent, false)) {
 
         fun bind(prediction: DogPrediction?) {
-            itemView.breed_list_tv.text = prediction?.prediction
-            itemView.confidence_list_tv.text =
+            itemView.breed_grid_tv.text = prediction?.prediction
+            itemView.confidence_grid_tv.text =
                     "%.1f %%".format(100.0 * (prediction?.accuracy as Float))
         }
     }

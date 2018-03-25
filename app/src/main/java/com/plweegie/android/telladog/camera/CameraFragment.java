@@ -44,6 +44,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v13.app.FragmentCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
@@ -54,6 +55,9 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.util.Size;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
@@ -62,16 +66,15 @@ import android.widget.TextView;
 
 import com.plweegie.android.telladog.ImageClassifier;
 import com.plweegie.android.telladog.InferenceAdapter;
+import com.plweegie.android.telladog.MainActivity;
 import com.plweegie.android.telladog.R;
+import com.plweegie.android.telladog.ui.FragmentSwitchListener;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.SortedMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -95,6 +98,7 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
     private ImageClassifier classifier;
     private RecyclerView recyclerView;
     private InferenceAdapter adapter;
+    private FragmentSwitchListener mFragmentSwitchListener;
 
     private final TextureView.SurfaceTextureListener surfaceTextureListener =
             new TextureView.SurfaceTextureListener() {
@@ -215,6 +219,13 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
         return new CameraFragment();
     }
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+        mFragmentSwitchListener = (MainActivity) getActivity();
+    }
+
     /** Layout the preview and buttons. */
     @Override
     public View onCreateView(
@@ -283,6 +294,23 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
     public void onDestroy() {
         classifier.close();
         super.onDestroy();
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.fragment_camera, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.change_to_list:
+                mFragmentSwitchListener.onDogListFragmentSelect();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     /**
@@ -607,7 +635,7 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
         List<Pair<String, Float>> predictions = classifier.getPredictions(bitmap);
         bitmap.recycle();
 
-        if (predictions.get(0).getSecond() < 0.40) {
+        if (predictions.get(0).getSecond() < 0.30) {
             showToast(getString(R.string.no_dogs_here));
         } else {
             showToast(predictions.get(0).getFirst());

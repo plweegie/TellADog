@@ -36,10 +36,9 @@ import android.support.v4.content.FileProvider
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import com.plweegie.android.telladog.ImageClassifier
+import com.plweegie.android.telladog.MainActivity
 import com.plweegie.android.telladog.MyApp
 import com.plweegie.android.telladog.R
 import com.plweegie.android.telladog.adapters.PhotoGridAdapter
@@ -66,6 +65,7 @@ class DogListFragment : Fragment() {
     private lateinit var mViewModel: PredictionListViewModel
     private lateinit var mClassifier: ImageClassifier
     private lateinit var mAdapter: PhotoGridAdapter
+    private lateinit var mFragmentSwitchListener: FragmentSwitchListener
 
     private var mClassifierThread: HandlerThread? = null
     private var mClassifierHandler: Handler? = null
@@ -79,8 +79,12 @@ class DogListFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
+
         mViewModel = ViewModelProviders.of(activity as FragmentActivity, mViewModelFactory)
                 .get(PredictionListViewModel::class.java)
+
+        mFragmentSwitchListener = activity as MainActivity
 
         mAdapter = PhotoGridAdapter()
         mAdapter.setHasStableIds(true)
@@ -110,6 +114,8 @@ class DogListFragment : Fragment() {
             }
             startCameraIntent()
         }
+
+        setHasOptionsMenu(true)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -149,6 +155,23 @@ class DogListFragment : Fragment() {
                         && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
                     startCameraIntent()
                 }
+            }
+        }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
+        super.onCreateOptionsMenu(menu, inflater)
+        inflater?.inflate(R.menu.fragment_dog_list, menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        return when (item?.itemId) {
+            R.id.change_to_camera -> {
+                mFragmentSwitchListener.onCameraFragmentSelect()
+                true
+            }
+            else -> {
+                super.onOptionsItemSelected(item)
             }
         }
     }
@@ -205,10 +228,14 @@ class DogListFragment : Fragment() {
     private fun classify(bitmapUrl: String) {
         val bmOptions = BitmapFactory.Options()
         val bitmap = BitmapFactory.decodeFile(bitmapUrl, bmOptions)
-        val scaledBitmap = Bitmap.createScaledBitmap(bitmap, ImageClassifier.DIM_IMG_SIZE_X,
-                ImageClassifier.DIM_IMG_SIZE_Y, false)
 
-        val predictions = mClassifier.getPredictions(scaledBitmap)
+        val croppedBitmap = Bitmap.createBitmap(bitmap,
+                (bitmap.width - ImageClassifier.DIM_IMG_SIZE_X) / 2,
+                (bitmap.height - ImageClassifier.DIM_IMG_SIZE_Y) / 2,
+                ImageClassifier.DIM_IMG_SIZE_X,
+                ImageClassifier.DIM_IMG_SIZE_Y)
+
+        val predictions = mClassifier.getPredictions(croppedBitmap)
         val dogPrediction = DogPrediction(
                 predictions?.get(0)?.first,
                 predictions?.get(0)?.second,
@@ -245,6 +272,8 @@ class DogListFragment : Fragment() {
         const val REQUEST_PERMISSIONS = 121
         const val THREAD_NAME = "classifier_thread"
         const val TAG = "DogListFragment"
+        const val CAMERA_WIDTH_ARG = "camera_width"
+        const val CAMERA_HEIGHT_ARG = "camera_height"
 
         fun newInstance(): DogListFragment = DogListFragment()
     }

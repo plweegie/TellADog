@@ -67,16 +67,22 @@ import android.widget.TextView;
 import com.plweegie.android.telladog.ImageClassifier;
 import com.plweegie.android.telladog.InferenceAdapter;
 import com.plweegie.android.telladog.MainActivity;
+import com.plweegie.android.telladog.MyApp;
 import com.plweegie.android.telladog.R;
+import com.plweegie.android.telladog.data.DogPrediction;
+import com.plweegie.android.telladog.data.PredictionRepository;
 import com.plweegie.android.telladog.ui.FragmentSwitchListener;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+
+import javax.inject.Inject;
 
 import kotlin.Pair;
 
@@ -90,6 +96,9 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
     private static final String HANDLE_THREAD_NAME = "CameraBackground";
 
     private static final int PERMISSIONS_REQUEST_CODE = 1;
+
+    @Inject
+    PredictionRepository mRepository;
 
     private final Object lock = new Object();
     private boolean runClassifier = false;
@@ -123,7 +132,7 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
             };
 
     private String cameraId;
-
+    
     private AutoFitTextureView textureView;
 
     private CameraCaptureSession captureSession;
@@ -131,6 +140,8 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
     private CameraDevice cameraDevice;
 
     private Size previewSize;
+
+    private Pair<String, Float> mTopPrediction;
 
     private final CameraDevice.StateCallback stateCallback =
             new CameraDevice.StateCallback() {
@@ -217,6 +228,12 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
 
     public static CameraFragment newInstance() {
         return new CameraFragment();
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        ((MyApp) getActivity().getApplication()).getMAppComponent().inject(this);
+        super.onAttach(context);
     }
 
     @Override
@@ -308,6 +325,14 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
             case R.id.change_to_list:
                 mFragmentSwitchListener.onDogListFragmentSelect();
                 return true;
+            case R.id.save_pic_data:
+                DogPrediction predictionToSave = new DogPrediction(
+                        mTopPrediction.getFirst(),
+                        mTopPrediction.getSecond(),
+                        new Date().getTime()
+                );
+                mRepository.add(predictionToSave);
+
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -635,10 +660,13 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
         List<Pair<String, Float>> predictions = classifier.getPredictions(bitmap);
         bitmap.recycle();
 
+        Pair<String, Float> topPrediction = predictions.get(0);
+        mTopPrediction = topPrediction;
+
         if (predictions.get(0).getSecond() < 0.30) {
             showToast(getString(R.string.no_dogs_here));
         } else {
-            showToast(predictions.get(0).getFirst());
+            showToast(topPrediction.getFirst());
         }
 
         updateAdapterAsync(predictions);

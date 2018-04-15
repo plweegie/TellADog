@@ -18,10 +18,4 @@ data class DogPrediction(@PrimaryKey(autoGenerate = true) val id: Long?,
                 imageUri: String,
                 timestamp: Long):
             this(null, prediction, accuracy, imageUri, timestamp)
-
-    @Ignore
-    constructor(prediction: String?,
-                accuracy: Float?,
-                timestamp: Long):
-            this(null, prediction, accuracy, null, timestamp)
 }

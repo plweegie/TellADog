@@ -20,7 +20,6 @@ package com.plweegie.android.telladog.camera;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -272,25 +271,14 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
     private void showToast(final String text) {
         final Activity activity = getActivity();
         if (activity != null) {
-            activity.runOnUiThread(
-                    new Runnable() {
-                        @Override
-                        public void run() {
-                            textView.setText(text);
-                        }
-                    });
+            activity.runOnUiThread(() -> textView.setText(text));
         }
     }
 
     private void updateAdapterAsync(final List<Pair<String, Float>> predictions) {
         final Activity activity = getActivity();
         if (activity != null) {
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    adapter.setPredictions(predictions);
-                }
-            });
+            activity.runOnUiThread(() -> adapter.setPredictions(predictions));
         }
     }
 
@@ -329,13 +317,10 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
         recyclerView = view.findViewById(R.id.inference_rv);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
-        textView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (recyclerView.getVisibility() != View.VISIBLE) {
-                    recyclerView.setAdapter(adapter);
-                    recyclerView.setVisibility(View.VISIBLE);
-                }
+        textView.setOnClickListener(clickableView -> {
+            if (recyclerView.getVisibility() != View.VISIBLE) {
+                recyclerView.setAdapter(adapter);
+                recyclerView.setVisibility(View.VISIBLE);
             }
         });
     }
@@ -619,13 +604,10 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
             SurfaceTexture texture = textureView.getSurfaceTexture();
             assert texture != null;
 
-            textureView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    if (recyclerView.getVisibility() == View.VISIBLE) {
-                        recyclerView.setAdapter(null);
-                        recyclerView.setVisibility(View.GONE);
-                    }
+            textureView.setOnClickListener(view -> {
+                if (recyclerView.getVisibility() == View.VISIBLE) {
+                    recyclerView.setAdapter(null);
+                    recyclerView.setVisibility(View.GONE);
                 }
             });
 
@@ -924,12 +906,7 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
                     .setMessage(getArguments().getString(ARG_MESSAGE))
                     .setPositiveButton(
                             android.R.string.ok,
-                            new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                    activity.finish();
-                                }
-                            })
+                            (dialog, i) -> activity.finish())
                     .create();
         }
     }

@@ -323,8 +323,8 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
     /** Connect the buttons to their event handler. */
     @Override
     public void onViewCreated(final View view, Bundle savedInstanceState) {
-        textureView = (AutoFitTextureView) view.findViewById(R.id.texture);
-        textView = (TextView) view.findViewById(R.id.text);
+        textureView = view.findViewById(R.id.texture);
+        textView = view.findViewById(R.id.text);
 
         recyclerView = view.findViewById(R.id.inference_rv);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));

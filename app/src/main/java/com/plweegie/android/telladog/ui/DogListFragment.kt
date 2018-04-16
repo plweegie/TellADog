@@ -271,8 +271,6 @@ class DogListFragment : Fragment() {
         const val REQUEST_PERMISSIONS = 121
         const val THREAD_NAME = "classifier_thread"
         const val TAG = "DogListFragment"
-        const val CAMERA_WIDTH_ARG = "camera_width"
-        const val CAMERA_HEIGHT_ARG = "camera_height"
 
         fun newInstance(): DogListFragment = DogListFragment()
     }

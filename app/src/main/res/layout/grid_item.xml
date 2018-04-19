@@ -1,45 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="100dp"
-    android:padding="4dp"
-    android:orientation="vertical" >
+    android:orientation="vertical"
+    android:padding="4dp">
 
-    <android.support.v7.widget.CardView
-        xmlns:android="http://schemas.android.com/apk/res/android"
+    <android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:card_view="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/prediction_card"
-        android:background="@color/cardview_light_background"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="@color/cardview_light_background"
         card_view:cardUseCompatPadding="true"
         tools:style="@style/CardView">
 
-        <LinearLayout
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
+            android:layout_height="wrap_content"
             android:padding="4dp">
 
-            <TextView
-                android:id="@+id/breed_grid_tv"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textStyle="bold"
-                android:textSize="20sp" />
+            <ImageView
+                android:id="@+id/thumbnail_imageview"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_margin="8dp"
+                android:layout_marginRight="16dp"
+                android:layout_centerVertical="true"
+                android:layout_alignParentLeft="true" />
 
-            <TextView
-                android:id="@+id/confidence_grid_tv"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="20sp" />
+            <LinearLayout
+                android:layout_toRightOf="@+id/thumbnail_imageview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_centerVertical="true"
+                android:gravity="center_vertical"
+                android:orientation="vertical">
 
-        </LinearLayout>
+                <TextView
+                    android:id="@+id/breed_grid_tv"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/confidence_grid_tv"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp" />
+
+            </LinearLayout>
+
+        </RelativeLayout>
 
     </android.support.v7.widget.CardView>
 

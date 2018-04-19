@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.plweegie.android.telladog.R
 import com.plweegie.android.telladog.data.DogPrediction
+import com.plweegie.android.telladog.utils.ThumbnailLoader
 import kotlinx.android.synthetic.main.grid_item.view.*
 
 
@@ -37,6 +38,9 @@ class PhotoGridAdapter : RecyclerView.Adapter<PhotoGridAdapter.PhotoGridHolder>(
             itemView.breed_grid_tv.text = prediction?.prediction
             itemView.confidence_grid_tv.text =
                     "%.1f %%".format(100.0 * (prediction?.accuracy as Float))
+
+            itemView.thumbnail_imageview.setImageBitmap(
+                    ThumbnailLoader.decodeBitmapFromFile(prediction.imageUri, 50, 50))
         }
     }
 }

@@ -30,7 +30,8 @@
                 android:layout_margin="8dp"
                 android:layout_marginRight="16dp"
                 android:layout_centerVertical="true"
-                android:layout_alignParentLeft="true" />
+                android:layout_alignParentLeft="true"
+                android:scaleType="centerCrop" />
 
             <LinearLayout
                 android:layout_toRightOf="@+id/thumbnail_imageview"

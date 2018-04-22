@@ -47,7 +47,6 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v13.app.FragmentCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
@@ -95,7 +94,7 @@ import javax.inject.Inject;
 import kotlin.Pair;
 
 
-public class CameraFragment extends Fragment implements FragmentCompat.OnRequestPermissionsResultCallback {
+public class CameraFragment extends Fragment {
 
     private final String TAG = this.getClass().getSimpleName();
 
@@ -219,11 +218,7 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
             new ImageReader.OnImageAvailableListener() {
                 @Override
                 public void onImageAvailable(ImageReader imageReader) {
-                    try {
-                        mOutputFile = createImageFile();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    mOutputFile = createImageFile();
 
                     if (mImageUrl != null && mOutputFile != null) {
                         DogPrediction predictionToSave = new DogPrediction(
@@ -530,12 +525,6 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
         return true;
     }
 
-    @Override
-    public void onRequestPermissionsResult(
-            int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
-
     /** Closes the current {@link CameraDevice}. */
     private void closeCamera() {
         try {
@@ -812,7 +801,7 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
         }
     }
 
-    private File createImageFile() throws IOException {
+    private File createImageFile() {
         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String fileName = "PREDICTION_" + timestamp + "_";
         File storageDir = getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES);

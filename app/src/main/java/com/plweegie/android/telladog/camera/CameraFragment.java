@@ -56,6 +56,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.util.Size;
+import android.util.SparseIntArray;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -97,6 +98,15 @@ import kotlin.Pair;
 public class CameraFragment extends Fragment implements FragmentCompat.OnRequestPermissionsResultCallback {
 
     private final String TAG = this.getClass().getSimpleName();
+
+    private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
+
+    static {
+        ORIENTATIONS.append(Surface.ROTATION_0, 90);
+        ORIENTATIONS.append(Surface.ROTATION_90, 0);
+        ORIENTATIONS.append(Surface.ROTATION_180, 270);
+        ORIENTATIONS.append(Surface.ROTATION_270, 180);
+    }
 
     private static final String FRAGMENT_DIALOG = "dialog";
 
@@ -246,6 +256,8 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
     private int state = STATE_PREVIEW;
 
     private Semaphore cameraOpenCloseLock = new Semaphore(1);
+
+    private int sensorOrientation;
 
     private CameraCaptureSession.CaptureCallback captureCallback =
             new CameraCaptureSession.CaptureCallback() {
@@ -425,7 +437,7 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
                 int displayRotation = activity.getWindowManager().getDefaultDisplay().getRotation();
                 // noinspection ConstantConditions
         /* Orientation of the camera sensor */
-                int sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
+                sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
                 boolean swappedDimensions = false;
                 switch (displayRotation) {
                     case Surface.ROTATION_0:
@@ -733,6 +745,9 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
             captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                     CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
 
+            int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
+            captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, getOrientation(rotation));
+
             CameraCaptureSession.CaptureCallback captureCallback =
                     new CameraCaptureSession.CaptureCallback() {
                         @Override
@@ -748,6 +763,10 @@ public class CameraFragment extends Fragment implements FragmentCompat.OnRequest
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
+    }
+
+    private int getOrientation(int rotation) {
+        return (ORIENTATIONS.get(rotation) + sensorOrientation + 270) % 360;
     }
 
     private void processCaptureResult(CaptureResult result) {

@@ -27,15 +27,19 @@ class ThumbnailLoader {
             return inSampleSize
         }
 
-        fun decodeBitmapFromFile(fileAbsolutePath: String?, reqWidth: Int, reqHeight: Int): Bitmap {
+        fun decodeBitmapFromFile(fileAbsolutePath: String?, reqWidth: Int, reqHeight: Int): Bitmap? {
 
             val options = BitmapFactory.Options()
             options.inJustDecodeBounds = true
-            BitmapFactory.decodeFile(fileAbsolutePath, options)
 
-            options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight)
-            options.inJustDecodeBounds = false
-            return BitmapFactory.decodeFile(fileAbsolutePath, options)
+            return if (fileAbsolutePath != null) {
+                BitmapFactory.decodeFile(fileAbsolutePath, options)
+                options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight)
+                options.inJustDecodeBounds = false
+                BitmapFactory.decodeFile(fileAbsolutePath, options)
+            } else {
+                null
+            }
         }
     }
 }

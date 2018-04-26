@@ -81,6 +81,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -96,7 +97,7 @@ import kotlin.Pair;
 
 public class CameraFragment extends Fragment {
 
-    private final String TAG = this.getClass().getSimpleName();
+    private static final String TAG = "CameraFragment";
 
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
 
@@ -137,6 +138,9 @@ public class CameraFragment extends Fragment {
      * Camera state: Picture was taken.
      */
     private static final int STATE_PICTURE_TAKEN = 4;
+
+    private static final int MINIMUM_PREVIEW_SIZE = 320;
+    private static final Size DESIRED_PREVIEW_SIZE = new Size(640, 480);
 
     @Inject
     PredictionRepository mRepository;
@@ -278,6 +282,41 @@ public class CameraFragment extends Fragment {
         }
     }
 
+    private static Size chooseOptimalSize(Size[] choices, int width, int height) {
+
+        int minSize = Math.max(Math.min(width, height), MINIMUM_PREVIEW_SIZE);
+        Size desiredSize = new Size(width, height);
+
+        boolean exactSizeFound = false;
+        List<Size> bigEnough = new ArrayList<>();
+        List<Size> notBigEnough = new ArrayList<>();
+
+        for (Size option : choices) {
+            if (option.equals(desiredSize)) {
+                exactSizeFound = true;
+            }
+
+            if (option.getWidth() >= minSize && option.getHeight() >= minSize) {
+                bigEnough.add(option);
+            } else {
+                notBigEnough.add(option);
+            }
+        }
+
+        if (exactSizeFound) {
+            return desiredSize;
+        }
+
+        // Pick the smallest of those big enough. If there is no one big enough, pick the
+        // largest of those not big enough.
+
+        if (bigEnough.size() > 0) {
+            return Collections.min(bigEnough, new CompareSizesByArea());
+        } else {
+            return choices[0];
+        }
+    }
+
     public static CameraFragment newInstance() {
         return new CameraFragment();
     }
@@ -384,11 +423,8 @@ public class CameraFragment extends Fragment {
 
     /**
      * Sets up member variables related to camera.
-     *
-     * @param width The width of available size for camera preview
-     * @param height The height of available size for camera preview
      */
-    private void setUpCameraOutputs(int width, int height) {
+    private void setUpCameraOutputs() {
         Activity activity = getActivity();
         CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
         try {
@@ -442,15 +478,9 @@ public class CameraFragment extends Fragment {
 
                 Point displaySize = new Point();
                 activity.getWindowManager().getDefaultDisplay().getSize(displaySize);
-                int rotatedPreviewWidth = width;
-                int rotatedPreviewHeight = height;
 
-                if (swappedDimensions) {
-                    rotatedPreviewWidth = height;
-                    rotatedPreviewHeight = width;
-                }
-
-                mPreviewSize = new Size(rotatedPreviewWidth, rotatedPreviewHeight);
+                mPreviewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class),
+                        DESIRED_PREVIEW_SIZE.getWidth(), DESIRED_PREVIEW_SIZE.getHeight());
 
                 // We fit the aspect ratio of TextureView to the size of preview we picked.
                 int orientation = getResources().getConfiguration().orientation;
@@ -499,7 +529,7 @@ public class CameraFragment extends Fragment {
         } else {
             mCheckedPermissions = true;
         }
-        setUpCameraOutputs(width, height);
+        setUpCameraOutputs();
         configureTransform(width, height);
         Activity activity = getActivity();
         CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);

@@ -632,7 +632,6 @@ public class CameraFragment extends Fragment {
 
             mTextureView.setOnClickListener(view -> {
                 if (mRecyclerView.getVisibility() == View.VISIBLE && mTextView != null) {
-                    mRecyclerView.setAdapter(null);
                     mRecyclerView.setVisibility(View.GONE);
                 }
             });

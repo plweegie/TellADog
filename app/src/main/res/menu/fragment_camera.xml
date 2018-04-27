@@ -6,7 +6,7 @@
         android:id="@+id/save_pic_data"
         android:title="@string/save_pic_data"
         android:icon="@drawable/ic_save_24dp"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="always" />
 
     <item
         android:id="@+id/change_to_list"

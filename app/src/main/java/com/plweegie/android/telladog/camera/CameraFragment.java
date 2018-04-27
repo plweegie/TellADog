@@ -270,8 +270,11 @@ public class CameraFragment extends Fragment {
 
     private void showToast(final String text) {
         final Activity activity = getActivity();
+
         if (activity != null) {
-            activity.runOnUiThread(() -> mTextView.setText(text));
+            if (mTextView != null) {
+                activity.runOnUiThread(() -> mTextView.setText(text));
+            }
         }
     }
 
@@ -349,15 +352,18 @@ public class CameraFragment extends Fragment {
         mTextureView = view.findViewById(R.id.texture);
         mTextView = view.findViewById(R.id.text);
 
+        if (mTextView != null) {
+
+            mTextView.setOnClickListener(clickableView -> {
+                if (mRecyclerView.getVisibility() != View.VISIBLE) {
+                    mRecyclerView.setVisibility(View.VISIBLE);
+                }
+            });
+        }
+
         mRecyclerView = view.findViewById(R.id.inference_rv);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-
-        mTextView.setOnClickListener(clickableView -> {
-            if (mRecyclerView.getVisibility() != View.VISIBLE) {
-                mRecyclerView.setAdapter(mAdapter);
-                mRecyclerView.setVisibility(View.VISIBLE);
-            }
-        });
+        mRecyclerView.setAdapter(mAdapter);
     }
 
     /** Load the model and labels. */
@@ -625,7 +631,7 @@ public class CameraFragment extends Fragment {
             assert texture != null;
 
             mTextureView.setOnClickListener(view -> {
-                if (mRecyclerView.getVisibility() == View.VISIBLE) {
+                if (mRecyclerView.getVisibility() == View.VISIBLE && mTextView != null) {
                     mRecyclerView.setAdapter(null);
                     mRecyclerView.setVisibility(View.GONE);
                 }

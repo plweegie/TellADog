@@ -352,6 +352,13 @@ public class CameraFragment extends Fragment {
         mTextureView = view.findViewById(R.id.texture);
         mTextView = view.findViewById(R.id.text);
 
+        mRecyclerView = view.findViewById(R.id.inference_rv);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+
+        mRecyclerView.setHasFixedSize(true);
+        mAdapter.setHasStableIds(true);
+        mRecyclerView.setAdapter(mAdapter);
+
         if (mTextView != null) {
 
             mTextView.setOnClickListener(clickableView -> {
@@ -360,10 +367,6 @@ public class CameraFragment extends Fragment {
                 }
             });
         }
-
-        mRecyclerView = view.findViewById(R.id.inference_rv);
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        mRecyclerView.setAdapter(mAdapter);
     }
 
     /** Load the model and labels. */

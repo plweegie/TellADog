@@ -25,6 +25,7 @@ class MainActivity : AppCompatActivity(), FragmentSwitchListener {
     override fun onDogListFragmentSelect() {
         val dogListFragment = DogListFragment.newInstance()
         supportFragmentManager.beginTransaction()
+                .setCustomAnimations(R.anim.fragment_slide_in, R.anim.fragment_slide_out)
                 .replace(R.id.container, dogListFragment)
                 .commit()
     }

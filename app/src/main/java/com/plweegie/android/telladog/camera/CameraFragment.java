@@ -233,7 +233,8 @@ public class CameraFragment extends Fragment {
                         );
 
                         mRepository.add(predictionToSave);
-                        mBackgroundHandler.post(new ImageSaver(imageReader.acquireNextImage(), mOutputFile));
+                        mBackgroundHandler.post(
+                                new ImageSaver(getActivity(), imageReader.acquireNextImage(), mOutputFile));
                     } else {
                         Toast.makeText(getActivity(), "Failed to save image", Toast.LENGTH_SHORT)
                             .show();
@@ -873,14 +874,16 @@ public class CameraFragment extends Fragment {
         updateAdapterAsync(predictions);
     }
 
-    private static class ImageSaver implements Runnable {
+    private class ImageSaver implements Runnable {
 
         private final Image mImage;
         private final File mFile;
+        private final Context mContext;
 
-        ImageSaver(Image image, File file) {
+        ImageSaver(Context context, Image image, File file) {
             mImage = image;
             mFile = file;
+            mContext = context;
         }
 
         @Override
@@ -906,6 +909,9 @@ public class CameraFragment extends Fragment {
                         e.printStackTrace();
                     }
                 }
+
+                ((Activity) mContext).runOnUiThread(
+                        () -> mFragmentSwitchListener.onDogListFragmentSelect());
             }
         }
     }

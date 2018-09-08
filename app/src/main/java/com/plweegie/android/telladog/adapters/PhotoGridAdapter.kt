@@ -7,9 +7,11 @@ import com.plweegie.android.telladog.R
 import com.plweegie.android.telladog.data.DogPrediction
 import com.plweegie.android.telladog.utils.ThumbnailLoader
 import kotlinx.android.synthetic.main.grid_item.view.*
+import kotlinx.coroutines.experimental.DefaultDispatcher
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.withContext
 
 
 class PhotoGridAdapter : RecyclerView.Adapter<PhotoGridAdapter.PhotoGridHolder>() {
@@ -43,9 +45,9 @@ class PhotoGridAdapter : RecyclerView.Adapter<PhotoGridAdapter.PhotoGridHolder>(
                     "%.1f %%".format(100.0 * (prediction?.accuracy as Float))
 
             launch(UI) {
-                val bitmap = async {
+                val bitmap = withContext(DefaultDispatcher) {
                     ThumbnailLoader.decodeBitmapFromFile(prediction.imageUri, 50, 50)
-                }.await()
+                }
 
                 itemView.thumbnail_imageview.setImageBitmap(bitmap)
             }

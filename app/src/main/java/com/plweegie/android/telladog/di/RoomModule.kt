@@ -1,7 +1,9 @@
-package com.plweegie.android.telladog.data
+package com.plweegie.android.telladog.di
 
 import android.app.Application
 import android.arch.persistence.room.Room
+import com.plweegie.android.telladog.data.PredictionDb
+import com.plweegie.android.telladog.data.PredictionRepository
 import com.plweegie.android.telladog.viewmodels.PredictionListViewModelFactory
 import dagger.Module
 import dagger.Provides
@@ -14,7 +16,7 @@ class RoomModule(private val mDatabaseName: String) {
 
     @Provides
     @Singleton
-    fun provideDatabase(application: Application): PredictionDb  =
+    fun provideDatabase(application: Application): PredictionDb =
             Room.databaseBuilder(application, PredictionDb::class.java, mDatabaseName).build()
 
     @Provides

@@ -20,16 +20,17 @@ package com.plweegie.android.telladog
 import android.app.Activity
 import android.graphics.Bitmap
 import android.util.Log
-import org.tensorflow.lite.Interpreter
+import com.google.firebase.ml.common.FirebaseMLException
+import com.google.firebase.ml.custom.*
+import com.google.firebase.ml.custom.model.FirebaseCloudModelSource
+import com.google.firebase.ml.custom.model.FirebaseLocalModelSource
 import java.io.BufferedReader
-import java.io.FileInputStream
 import java.io.IOException
 import java.io.InputStreamReader
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.nio.MappedByteBuffer
-import java.nio.channels.FileChannel
 import java.util.*
+import javax.inject.Inject
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
@@ -38,10 +39,20 @@ class ImageClassifier @Throws(IOException::class) constructor(val mActivity: Act
 
     private val intValues = IntArray(DIM_IMG_SIZE_X * DIM_IMG_SIZE_Y)
 
-    private var tflite: Interpreter? = null
     private var labelList: MutableList<String>
+    private var mFirebaseInterpreter: FirebaseModelInterpreter? = null
 
-    lateinit var imgUrl: String
+    @Inject
+    lateinit var mCloudSource: FirebaseCloudModelSource
+
+    @Inject
+    lateinit var mLocalSource: FirebaseLocalModelSource
+
+    @Inject
+    lateinit var mModelOptions: FirebaseModelOptions
+
+    @Inject
+    lateinit var mModelInputOutputOptions: FirebaseModelInputOutputOptions
 
     private var imgData: ByteBuffer
 
@@ -54,8 +65,15 @@ class ImageClassifier @Throws(IOException::class) constructor(val mActivity: Act
     )
 
     init {
-        tflite = Interpreter(loadModelFile(mActivity))
+        (mActivity.application as MyApp).mAppComponent.inject(this)
+
+        FirebaseModelManager.getInstance().apply {
+            registerCloudModelSource(mCloudSource)
+            registerLocalModelSource(mLocalSource)
+        }
+        
         labelList = loadLabelList(mActivity)
+        mFirebaseInterpreter = FirebaseModelInterpreter.getInstance(mModelOptions)
 
         imgData = ByteBuffer.allocateDirect(4 * DIM_BATCH_SIZE * DIM_IMG_SIZE_X *
             DIM_IMG_SIZE_Y * DIM_PIXEL_SIZE)
@@ -63,17 +81,27 @@ class ImageClassifier @Throws(IOException::class) constructor(val mActivity: Act
 
         labelProbArray = Array(1, { FloatArray(labelList.size) } )
         filterLabelProbArray = Array(FILTER_STAGES, { FloatArray(labelList.size) })
-        Log.d(TAG, "Created a Tensorflow Lite Image Classifier.")
     }
 
     fun getPredictions(bitmap: Bitmap): List<Pair<String, Float>>? {
-        if (tflite == null) {
+        if (mFirebaseInterpreter == null) {
             Log.e(TAG, "Image classifier has not been initialized; Skipped.")
             return null
         }
 
         convertBitmapToByteBuffer(bitmap)
-        tflite?.run(imgData, labelProbArray)
+
+        val inputs = FirebaseModelInputs.Builder()
+                .add(imgData)
+                .build()
+
+        mFirebaseInterpreter?.run(inputs, mModelInputOutputOptions)?.addOnSuccessListener {
+            outputs -> labelProbArray = outputs.getOutput<Array<FloatArray>>(0)
+        }?.addOnFailureListener {
+            Log.e("Interpreter", "Error getting predictions, code ${(it as FirebaseMLException).code}")
+            it.printStackTrace()
+        }
+
         applyFilter()
 
         return getTopKLabels()
@@ -101,8 +129,8 @@ class ImageClassifier @Throws(IOException::class) constructor(val mActivity: Act
     }
 
     fun close() {
-        tflite?.close()
-        tflite = null
+        mFirebaseInterpreter?.close()
+        mFirebaseInterpreter = null
     }
 
     @Throws(IOException::class)
@@ -118,17 +146,6 @@ class ImageClassifier @Throws(IOException::class) constructor(val mActivity: Act
 
         reader.close()
         return labelList
-    }
-
-    @Throws(IOException::class)
-    private fun loadModelFile(activity: Activity): MappedByteBuffer {
-        val fileDescriptor = activity.assets.openFd(MODEL_PATH)
-        val inputStream = FileInputStream(fileDescriptor.fileDescriptor)
-        val fileChannel = inputStream.channel
-
-        val startOffset = fileDescriptor.startOffset
-        val declaredLength = fileDescriptor.declaredLength
-        return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
     }
 
     private fun convertBitmapToByteBuffer(bitmap: Bitmap) {
@@ -170,7 +187,6 @@ class ImageClassifier @Throws(IOException::class) constructor(val mActivity: Act
 
     companion object {
         private const val TAG = "ImageClassifier"
-        private const val MODEL_PATH = "dog_optimized_graph.lite"
         private const val LABEL_PATH = "dog_labels.txt"
 
         private const val RESULTS_TO_SHOW = 3

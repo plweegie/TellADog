@@ -624,7 +624,7 @@ public class CameraFragment extends Fragment {
                             classifyFrame();
                         }
                     }
-                    mBackgroundHandler.post(periodicClassify);
+                    mBackgroundHandler.postDelayed(periodicClassify, 1000);
                 }
             };
 

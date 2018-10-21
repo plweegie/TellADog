@@ -16,7 +16,12 @@ import kotlinx.coroutines.experimental.withContext
 
 class PhotoGridAdapter : RecyclerView.Adapter<PhotoGridAdapter.PhotoGridHolder>() {
 
+    interface PhotoGridListener {
+        fun onPhotoGridClick(itemId: Long)
+    }
+
     private var mPredictions: MutableList<DogPrediction> = mutableListOf()
+    lateinit var onItemClickListener: PhotoGridListener
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PhotoGridHolder {
         val inflater = LayoutInflater.from(parent.context)
@@ -43,6 +48,10 @@ class PhotoGridAdapter : RecyclerView.Adapter<PhotoGridAdapter.PhotoGridHolder>(
             itemView.breed_grid_tv.text = prediction?.prediction
             itemView.confidence_grid_tv.text =
                     "%.1f %%".format(100.0 * (prediction?.accuracy as Float))
+
+            itemView.delete_iv.setOnClickListener {
+                onItemClickListener.onPhotoGridClick(prediction.timestamp)
+            }
 
             launch(UI) {
                 val bitmap = withContext(DefaultDispatcher) {

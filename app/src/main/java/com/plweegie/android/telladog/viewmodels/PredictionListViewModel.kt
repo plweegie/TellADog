@@ -6,9 +6,13 @@ import com.plweegie.android.telladog.data.DogPrediction
 import com.plweegie.android.telladog.data.PredictionRepository
 
 
-class PredictionListViewModel(repository: PredictionRepository) : ViewModel() {
+class PredictionListViewModel(val repository: PredictionRepository) : ViewModel() {
 
     private val mPredictionList = repository.getAll()
 
     fun getPredictionList(): LiveData<List<DogPrediction>> = mPredictionList
+
+    fun deletePrediction(predictionID: Long) {
+        repository.delete(predictionID)
+    }
 }

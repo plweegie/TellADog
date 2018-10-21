@@ -34,7 +34,7 @@ import kotlinx.android.synthetic.main.fragment_dog_list.*
 import javax.inject.Inject
 
 
-class DogListFragment : Fragment() {
+class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener {
 
     @Inject
     lateinit var mViewModelFactory: PredictionListViewModelFactory
@@ -59,13 +59,14 @@ class DogListFragment : Fragment() {
 
         mAdapter = PhotoGridAdapter()
         mAdapter.setHasStableIds(true)
+        mAdapter.onItemClickListener = this
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
             inflater.inflate(R.layout.fragment_dog_list, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val layoutManager = GridLayoutManager(activity, 2)
+        val layoutManager = GridLayoutManager(activity, 1)
         predictions_list.layoutManager = layoutManager
         predictions_list.setHasFixedSize(true)
         predictions_list.adapter = mAdapter
@@ -94,6 +95,10 @@ class DogListFragment : Fragment() {
                 super.onOptionsItemSelected(item)
             }
         }
+    }
+
+    override fun onPhotoGridClick(itemId: Long) {
+        mViewModel.deletePrediction(itemId)
     }
 
     companion object {

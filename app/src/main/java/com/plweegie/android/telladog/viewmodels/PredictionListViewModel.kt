@@ -6,7 +6,7 @@ import com.plweegie.android.telladog.data.DogPrediction
 import com.plweegie.android.telladog.data.PredictionRepository
 
 
-class PredictionListViewModel(val repository: PredictionRepository) : ViewModel() {
+class PredictionListViewModel(private val repository: PredictionRepository) : ViewModel() {
 
     private val mPredictionList = repository.getAll()
 
@@ -14,5 +14,9 @@ class PredictionListViewModel(val repository: PredictionRepository) : ViewModel(
 
     fun deletePrediction(predictionID: Long) {
         repository.delete(predictionID)
+    }
+
+    fun syncToFirebase(prediction: DogPrediction) {
+
     }
 }

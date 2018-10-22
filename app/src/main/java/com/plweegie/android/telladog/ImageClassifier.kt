@@ -65,7 +65,7 @@ class ImageClassifier @Throws(IOException::class) constructor(val mActivity: Act
     )
 
     init {
-        (mActivity.application as MyApp).mAppComponent.inject(this)
+        (mActivity.application as MyApp).machineLearningComponent.inject(this)
 
         FirebaseModelManager.getInstance().apply {
             registerCloudModelSource(mCloudSource)

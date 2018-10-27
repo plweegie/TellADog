@@ -24,10 +24,12 @@ import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentActivity
 import android.support.v7.widget.GridLayoutManager
 import android.view.*
+import android.widget.Toast
 import com.plweegie.android.telladog.MainActivity
 import com.plweegie.android.telladog.MyApp
 import com.plweegie.android.telladog.R
 import com.plweegie.android.telladog.adapters.PhotoGridAdapter
+import com.plweegie.android.telladog.data.DogPrediction
 import com.plweegie.android.telladog.viewmodels.PredictionListViewModel
 import com.plweegie.android.telladog.viewmodels.PredictionListViewModelFactory
 import kotlinx.android.synthetic.main.fragment_dog_list.*
@@ -77,6 +79,12 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener {
             }
         })
 
+        mViewModel.getSendingState().observe(this, Observer {
+            if (it == true) {
+                Toast.makeText(this@DogListFragment.activity, "Sending", Toast.LENGTH_SHORT)
+            }
+        })
+
         setHasOptionsMenu(true)
     }
 
@@ -97,8 +105,12 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener {
         }
     }
 
-    override fun onPhotoGridClick(itemId: Long) {
+    override fun onDeleteClicked(itemId: Long) {
         mViewModel.deletePrediction(itemId)
+    }
+
+    override fun onSyncClicked(prediction: DogPrediction?) {
+        mViewModel.syncToFirebase(prediction)
     }
 
     companion object {

@@ -15,6 +15,9 @@ interface PredictionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertPrediction(prediction: DogPrediction)
 
+    @Query("UPDATE predictions SET is_synced = 1 WHERE timestamp = :predictionId")
+    fun updatePrediction(predictionId: Long?)
+
     @Query("DELETE FROM predictions WHERE timestamp = :predictionId")
     fun deletePrediction(predictionId: Long?)
 

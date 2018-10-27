@@ -5,6 +5,7 @@ import com.plweegie.android.telladog.di.FirebaseModule
 import com.plweegie.android.telladog.di.MachineLearningModule
 import com.plweegie.android.telladog.di.RoomModule
 import com.plweegie.android.telladog.ui.DogListFragment
+import com.plweegie.android.telladog.viewmodels.PredictionListViewModel
 import dagger.Component
 import javax.inject.Singleton
 

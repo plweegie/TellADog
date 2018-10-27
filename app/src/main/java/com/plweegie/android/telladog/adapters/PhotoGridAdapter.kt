@@ -17,7 +17,8 @@ import kotlinx.coroutines.experimental.withContext
 class PhotoGridAdapter : RecyclerView.Adapter<PhotoGridAdapter.PhotoGridHolder>() {
 
     interface PhotoGridListener {
-        fun onPhotoGridClick(itemId: Long)
+        fun onDeleteClicked(itemId: Long)
+        fun onSyncClicked(prediction: DogPrediction?)
     }
 
     private var mPredictions: MutableList<DogPrediction> = mutableListOf()
@@ -45,17 +46,28 @@ class PhotoGridAdapter : RecyclerView.Adapter<PhotoGridAdapter.PhotoGridHolder>(
             RecyclerView.ViewHolder(inflater.inflate(layoutResId, parent, false)) {
 
         fun bind(prediction: DogPrediction?) {
-            itemView.breed_grid_tv.text = prediction?.prediction
-            itemView.confidence_grid_tv.text =
-                    "%.1f %%".format(100.0 * (prediction?.accuracy as Float))
+            itemView.apply {
+                breed_grid_tv.text = prediction?.prediction
+                confidence_grid_tv.text =
+                        "%.1f %%".format(100.0 * (prediction?.accuracy as Float))
 
-            itemView.delete_iv.setOnClickListener {
-                onItemClickListener.onPhotoGridClick(prediction.timestamp)
+                delete_iv.setOnClickListener {
+                    onItemClickListener.onDeleteClicked(prediction.timestamp)
+                }
+                sync_iv.setOnClickListener {
+                    if (!prediction.isSynced) {
+                        onItemClickListener.onSyncClicked(prediction)
+                    }
+                }
+                sync_iv.setBackgroundResource(
+                        if (prediction.isSynced) R.drawable.ic_cloud_done_24dp
+                        else R.drawable.ic_cloud_upload_blue_24dp
+                )
             }
 
             launch(UI) {
                 val bitmap = withContext(DefaultDispatcher) {
-                    ThumbnailLoader.decodeBitmapFromFile(prediction.imageUri, 50, 50)
+                    ThumbnailLoader.decodeBitmapFromFile(prediction?.imageUri, 50, 50)
                 }
 
                 itemView.thumbnail_imageview.setImageBitmap(bitmap)

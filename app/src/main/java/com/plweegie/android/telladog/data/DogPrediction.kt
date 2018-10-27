@@ -7,15 +7,17 @@ data class DogPrediction(@PrimaryKey(autoGenerate = true) val id: Long?,
                          val prediction: String?,
                          val accuracy: Float?,
                          @ColumnInfo(name = "image_uri") val imageUri: String?,
-                         val timestamp: Long) {
+                         val timestamp: Long,
+                         @ColumnInfo(name = "is_synced") val isSynced: Boolean) {
 
     @Ignore
-    constructor(): this(null, "", 0.0f, "", 0L)
+    constructor(): this(null, "", 0.0f, "", 0L, false)
 
     @Ignore
     constructor(prediction: String?,
                 accuracy: Float?,
                 imageUri: String,
-                timestamp: Long):
-            this(null, prediction, accuracy, imageUri, timestamp)
+                timestamp: Long,
+                isSynced: Boolean):
+            this(null, prediction, accuracy, imageUri, timestamp, isSynced)
 }

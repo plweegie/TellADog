@@ -85,11 +85,11 @@ dependencies {
     kapt 'com.google.dagger:dagger-android-processor:2.15'
 
     implementation 'com.google.firebase:firebase-core:16.0.4'
-    implementation 'com.google.firebase:firebase-database:16.0.3'
-    implementation 'com.google.firebase:firebase-storage:16.0.3'
+    implementation 'com.google.firebase:firebase-database:16.0.4'
+    implementation 'com.google.firebase:firebase-storage:16.0.4'
     implementation 'com.google.firebase:firebase-ml-model-interpreter:16.2.3'
 
-    implementation 'org.tensorflow:tensorflow-lite:0.1.7'
+    implementation 'org.tensorflow:tensorflow-lite:1.10'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'

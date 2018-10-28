@@ -2,8 +2,10 @@ package com.plweegie.android.telladog.data
 
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
+import android.net.Uri
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.storage.StorageReference
+import java.io.File
 import java.util.*
 import java.util.concurrent.ExecutorService
 import javax.inject.Inject
@@ -36,14 +38,29 @@ class PredictionRepository @Inject constructor(private val mDatabase: Prediction
     }
 
     fun syncToFirebase(prediction: DogPrediction?) {
-        val guid = UUID.randomUUID().toString()
         isSendingToCloud.value = true
 
+        sendToDatabase(prediction)
+        sendToStorage(prediction)
+    }
+
+    fun sendToDatabase(prediction: DogPrediction?) {
+        val guid = UUID.randomUUID().toString()
+
         firebaseDatabase.child(guid).setValue(prediction)
-                .addOnSuccessListener {
-                    isSendingToCloud.value = false
-                    update(prediction?.timestamp)
-                }
-                .addOnFailureListener {  }
+    }
+
+    fun sendToStorage(prediction: DogPrediction?) {
+
+        if (prediction != null) {
+            val file = Uri.fromFile(File(prediction.imageUri))
+            val dogImagesReference = firebaseStorage.child(file.lastPathSegment!!)
+
+            dogImagesReference.putFile(file)
+                    .addOnSuccessListener {
+                        isSendingToCloud.value = false
+                        update(prediction.timestamp)
+                    }
+        }
     }
 }

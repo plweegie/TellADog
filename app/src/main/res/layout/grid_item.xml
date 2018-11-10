@@ -66,6 +66,15 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
 
+                <ProgressBar
+                    android:id="@+id/syncing_progress"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginEnd="16dp"
+                    android:indeterminateTint="@android:color/white"
+                    android:indeterminateTintMode="src_in"
+                    android:visibility="gone" />
+
                 <ImageView
                     android:id="@+id/sync_iv"
                     android:scaleType="centerInside"

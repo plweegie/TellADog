@@ -24,7 +24,6 @@ import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentActivity
 import android.support.v7.widget.GridLayoutManager
 import android.view.*
-import android.widget.Toast
 import com.plweegie.android.telladog.MainActivity
 import com.plweegie.android.telladog.MyApp
 import com.plweegie.android.telladog.R
@@ -81,7 +80,7 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener {
 
         mViewModel.getSendingState().observe(this, Observer {
             if (it == true) {
-                Toast.makeText(this@DogListFragment.activity, "Sending", Toast.LENGTH_SHORT)
+
             }
         })
 

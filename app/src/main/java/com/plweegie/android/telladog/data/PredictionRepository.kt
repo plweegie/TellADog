@@ -2,9 +2,12 @@ package com.plweegie.android.telladog.data
 
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.storage.StorageReference
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.*
 import java.util.concurrent.ExecutorService
@@ -45,20 +48,20 @@ class PredictionRepository @Inject constructor(private val mDatabase: Prediction
         sendToStorage(prediction)
     }
 
-    fun sendToDatabase(prediction: DogPrediction?) {
+    private fun sendToDatabase(prediction: DogPrediction?) {
         val guid = UUID.randomUUID().toString()
 
         firebaseDatabase.child(guid).setValue(prediction)
     }
 
-    fun sendToStorage(prediction: DogPrediction?) {
+    private fun sendToStorage(prediction: DogPrediction?) {
 
         if (prediction != null) {
             val file = Uri.fromFile(File(prediction.imageUri))
             val dogImagesReference = firebaseStorage.child(file.lastPathSegment!!)
-            val data = getImageDataFromFile(prediction.imageUri)
+            val data = getImageDataFromFile(prediction.imageUri!!)
 
-            dogImagesReference.putFile(file)
+            dogImagesReference.putBytes(data)
                     .addOnSuccessListener {
                         prediction.syncState = DogPrediction.SyncState.SYNCED.value
                     }
@@ -71,7 +74,13 @@ class PredictionRepository @Inject constructor(private val mDatabase: Prediction
         }
     }
 
-    private fun getImageDataFromFile(filePath: String) {
+    private fun getImageDataFromFile(filePath: String): ByteArray {
 
+        val outputStream = ByteArrayOutputStream()
+        val options = BitmapFactory.Options().apply { inSampleSize = 4 }
+        val bitmap = BitmapFactory.decodeFile(filePath, options)
+
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
+        return outputStream.toByteArray()
     }
 }

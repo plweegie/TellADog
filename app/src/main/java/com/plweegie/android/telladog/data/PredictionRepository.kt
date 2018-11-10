@@ -17,16 +17,14 @@ class PredictionRepository @Inject constructor(private val mDatabase: Prediction
                                                private val firebaseStorage: StorageReference,
                                                private val firebaseDatabase: DatabaseReference) {
 
-    var isSendingToCloud: MutableLiveData<Boolean> = MutableLiveData()
-
     fun getAll(): LiveData<List<DogPrediction>> = mDatabase.predictionDao().getAllPredictions()
     
     fun add(prediction: DogPrediction) {
         executor.execute { mDatabase.predictionDao().insertPrediction(prediction) }
     }
 
-    fun update(predictionId: Long?) {
-        executor.execute { mDatabase.predictionDao().updatePrediction(predictionId) }
+    fun update(predictionId: Long?, syncState: Int) {
+        executor.execute { mDatabase.predictionDao().updatePrediction(predictionId, syncState) }
     }
 
     fun delete(predictionId: Long?) {
@@ -38,7 +36,10 @@ class PredictionRepository @Inject constructor(private val mDatabase: Prediction
     }
 
     fun syncToFirebase(prediction: DogPrediction?) {
-        isSendingToCloud.value = true
+        prediction?.syncState = DogPrediction.SyncState.SYNCING.value
+        prediction?.let {
+            update(it.timestamp, it.syncState)
+        }
 
         sendToDatabase(prediction)
         sendToStorage(prediction)
@@ -55,12 +56,22 @@ class PredictionRepository @Inject constructor(private val mDatabase: Prediction
         if (prediction != null) {
             val file = Uri.fromFile(File(prediction.imageUri))
             val dogImagesReference = firebaseStorage.child(file.lastPathSegment!!)
+            val data = getImageDataFromFile(prediction.imageUri)
 
             dogImagesReference.putFile(file)
                     .addOnSuccessListener {
-                        isSendingToCloud.value = false
-                        update(prediction.timestamp)
+                        prediction.syncState = DogPrediction.SyncState.SYNCED.value
+                    }
+                    .addOnFailureListener {
+                        prediction.syncState = DogPrediction.SyncState.NOT_SYNCED.value
+                    }
+                    .addOnCompleteListener {
+                        update(prediction.timestamp, prediction.syncState)
                     }
         }
+    }
+
+    private fun getImageDataFromFile(filePath: String) {
+
     }
 }

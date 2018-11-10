@@ -12,8 +12,6 @@ class PredictionListViewModel(private val repository: PredictionRepository) : Vi
 
     fun getPredictionList(): LiveData<List<DogPrediction>> = mPredictionList
 
-    fun getSendingState(): LiveData<Boolean> = repository.isSendingToCloud
-
     fun deletePrediction(predictionID: Long) {
         repository.delete(predictionID)
     }

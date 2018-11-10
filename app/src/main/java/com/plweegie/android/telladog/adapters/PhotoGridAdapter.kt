@@ -2,6 +2,7 @@ package com.plweegie.android.telladog.adapters
 
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import com.plweegie.android.telladog.R
 import com.plweegie.android.telladog.data.DogPrediction
@@ -51,19 +52,22 @@ class PhotoGridAdapter : RecyclerView.Adapter<PhotoGridAdapter.PhotoGridHolder>(
                     onItemClickListener.onDeleteClicked(prediction.timestamp)
                 }
                 sync_iv.setOnClickListener {
-                    if (!prediction.isSynced) {
+                    if (prediction.syncState == DogPrediction.SyncState.NOT_SYNCED.value) {
                         onItemClickListener.onSyncClicked(prediction)
                     }
                 }
                 sync_iv.setBackgroundResource(
-                        if (prediction.isSynced) R.drawable.ic_cloud_done_24dp
+                        if (prediction.syncState == DogPrediction.SyncState.SYNCED.value) R.drawable.ic_cloud_done_24dp
                         else R.drawable.ic_cloud_upload_blue_24dp
                 )
+
+                syncing_progress.visibility =
+                        if (prediction.syncState == DogPrediction.SyncState.SYNCING.value) View.VISIBLE else View.GONE
             }
 
             GlobalScope.launch(Dispatchers.Main) {
                 val bitmap = withContext(Dispatchers.Default) {
-                    ThumbnailLoader.decodeBitmapFromFile(prediction?.imageUri, 50, 50)
+                    ThumbnailLoader.decodeBitmapFromFile(prediction?.imageUri, 100, 100)
                 }
 
                 itemView.thumbnail_imageview.setImageBitmap(bitmap)

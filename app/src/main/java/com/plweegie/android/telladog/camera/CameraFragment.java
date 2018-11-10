@@ -229,8 +229,7 @@ public class CameraFragment extends Fragment {
                                 mTopPrediction.getFirst(),
                                 mTopPrediction.getSecond(),
                                 mImageUrl,
-                                new Date().getTime(),
-                                false
+                                new Date().getTime()
                         );
 
                         mRepository.add(predictionToSave);

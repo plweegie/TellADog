@@ -78,12 +78,6 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener {
             }
         })
 
-        mViewModel.getSendingState().observe(this, Observer {
-            if (it == true) {
-
-            }
-        })
-
         setHasOptionsMenu(true)
     }
 

@@ -72,7 +72,7 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener {
         predictions_list.setHasFixedSize(true)
         predictions_list.adapter = mAdapter
 
-        mViewModel.getPredictionList().observe(this, Observer {
+        mViewModel.getPredictionList().observe(viewLifecycleOwner, Observer {
             if (it != null) {
                 mAdapter.setContent(it)
             }

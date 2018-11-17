@@ -8,13 +8,15 @@
         android:id="@+id/breed_tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textStyle="bold"
-        android:textSize="20sp" />
+        android:fontFamily="@font/open_sans"
+        android:textSize="20sp"
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/confidence_tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:fontFamily="@font/open_sans"
         android:textSize="20sp"/>
 
 </LinearLayout>

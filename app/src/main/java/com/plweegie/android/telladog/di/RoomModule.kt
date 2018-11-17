@@ -9,6 +9,7 @@ import dagger.Module
 import dagger.Provides
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import javax.inject.Provider
 import javax.inject.Singleton
 
 @Module
@@ -25,6 +26,6 @@ class RoomModule(private val mDatabaseName: String) {
 
     @Provides
     @Singleton
-    fun provideViewModelFactory(repository: PredictionRepository): PredictionListViewModelFactory =
+    fun provideViewModelFactory(repository: Provider<PredictionRepository>): PredictionListViewModelFactory =
             PredictionListViewModelFactory(repository)
 }

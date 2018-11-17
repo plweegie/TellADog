@@ -31,6 +31,7 @@
         android:elevation="4dp"
         android:textColor="@color/control_background"
         android:textSize="18sp"
+        android:fontFamily="@font/open_sans"
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
         android:layout_marginBottom="32dp"

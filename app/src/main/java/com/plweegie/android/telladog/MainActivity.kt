@@ -1,16 +1,29 @@
 package com.plweegie.android.telladog
 
+import android.os.Build
 import android.os.Bundle
+import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
+import android.view.View
 import com.plweegie.android.telladog.camera.CameraFragment
 import com.plweegie.android.telladog.ui.DogListFragment
 import com.plweegie.android.telladog.ui.FragmentSwitchListener
+import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity(), FragmentSwitchListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            window.apply {
+                decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+                statusBarColor = ContextCompat.getColor(this@MainActivity, R.color.colorToolbar)
+            }
+        }
+
         setContentView(R.layout.activity_main)
+        setSupportActionBar(main_toolbar)
 
         var fragment = supportFragmentManager.findFragmentById(R.id.container)
 

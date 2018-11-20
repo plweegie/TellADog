@@ -6,6 +6,6 @@
         android:id="@+id/change_to_camera"
         android:title="@string/change_to_camera"
         android:icon="@drawable/ic_videocam_24dp"
-        app:showAsAction="never" />
+        app:showAsAction="ifRoom" />
 
 </menu>

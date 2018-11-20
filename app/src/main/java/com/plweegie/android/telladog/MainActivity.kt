@@ -46,6 +46,7 @@ class MainActivity : AppCompatActivity(), FragmentSwitchListener {
     override fun onCameraFragmentSelect() {
         val cameraFragment = CameraFragment.newInstance()
         supportFragmentManager.beginTransaction()
+                .setCustomAnimations(R.anim.camera_slide_in, R.anim.camera_slide_out)
                 .replace(R.id.container, cameraFragment)
                 .commit()
     }

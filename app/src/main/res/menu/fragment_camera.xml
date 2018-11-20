@@ -6,12 +6,12 @@
         android:id="@+id/save_pic_data"
         android:title="@string/save_pic_data"
         android:icon="@drawable/ic_save_24dp"
-        app:showAsAction="always" />
+        app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/change_to_list"
         android:title="@string/change_to_list"
-        android:icon="@drawable/ic_camera_24dp"
-        app:showAsAction="never" />
+        android:icon="@drawable/ic_photo_library_24dp"
+        app:showAsAction="ifRoom" />
 
 </menu>

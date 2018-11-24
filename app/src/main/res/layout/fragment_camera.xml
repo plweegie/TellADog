@@ -9,6 +9,16 @@
         android:layout_width="match_parent"
         android:layout_gravity="center_horizontal"
         android:layout_height="match_parent" />
+    
+    <ProgressBar
+        android:id="@+id/saving_progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:visibility="gone"
+        android:indeterminateTint="@color/control_background"
+        android:indeterminateTintMode="src_in"
+        android:background="@drawable/progress_bar_circle" />
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/inference_rv"

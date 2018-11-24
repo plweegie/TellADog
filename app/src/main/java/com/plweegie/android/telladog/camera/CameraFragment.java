@@ -64,6 +64,7 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -152,6 +153,7 @@ public class CameraFragment extends Fragment {
     private ImageClassifier mClassifier;
     private RecyclerView mRecyclerView;
     private InferenceAdapter mAdapter;
+    private ProgressBar mIndicator;
     private FragmentSwitchListener mFragmentSwitchListener;
 
     private final TextureView.SurfaceTextureListener mSurfaceTextureListener =
@@ -353,6 +355,8 @@ public class CameraFragment extends Fragment {
         mTextureView = view.findViewById(R.id.texture);
         mTextView = view.findViewById(R.id.text);
 
+        mIndicator = view.findViewById(R.id.saving_progress_bar);
+
         mRecyclerView = view.findViewById(R.id.inference_rv);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
@@ -424,6 +428,7 @@ public class CameraFragment extends Fragment {
                 mFragmentSwitchListener.onDogListFragmentSelect();
                 return true;
             case R.id.save_pic_data:
+                mIndicator.setVisibility(View.VISIBLE);
                 takePicture();
                 return true;
             default:
@@ -915,7 +920,10 @@ public class CameraFragment extends Fragment {
                 }
 
                 ((Activity) mContext).runOnUiThread(
-                        () -> mFragmentSwitchListener.onDogListFragmentSelect());
+                        () -> {
+                            mIndicator.setVisibility(View.GONE);
+                            mFragmentSwitchListener.onDogListFragmentSelect();
+                        });
             }
         }
     }

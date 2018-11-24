@@ -83,8 +83,6 @@
                     android:layout_marginEnd="16dp"
                     android:indeterminateTint="@color/colorPrimary"
                     android:indeterminateTintMode="src_in"
-                    android:progressBackgroundTint="@color/control_background"
-                    android:progressBackgroundTintMode="src_in"
                     android:visibility="gone" />
 
                 <ImageView

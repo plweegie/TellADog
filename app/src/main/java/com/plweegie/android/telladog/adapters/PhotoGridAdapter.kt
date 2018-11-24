@@ -56,7 +56,7 @@ class PhotoGridAdapter : RecyclerView.Adapter<PhotoGridAdapter.PhotoGridHolder>(
                         onItemClickListener.onSyncClicked(prediction)
                     }
                 }
-                sync_iv.setBackgroundResource(
+                sync_iv.setImageResource(
                         if (prediction.syncState == DogPrediction.SyncState.SYNCED.value) R.drawable.ic_cloud_done_24dp
                         else R.drawable.ic_cloud_upload_blue_24dp
                 )

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="colorToolbar">@android:color/white</color>
-    <color name="colorPrimary">#FFC107</color>
-    <color name="colorPrimaryDark">#FFA000</color>
-    <color name="colorAccent">#0091EA</color>
-    <color name="control_background">#FF6F00</color>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#DD2C00</color>
+    <color name="control_background">#3949AB</color>
     <color name="transparent_background">#00000000</color>
     <color name="transparent_control_background">#00FF6F00</color>
 </resources>

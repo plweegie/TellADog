@@ -1,7 +1,6 @@
 package com.plweegie.android.telladog.data
 
 import android.arch.lifecycle.LiveData
-import android.arch.lifecycle.MutableLiveData
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri

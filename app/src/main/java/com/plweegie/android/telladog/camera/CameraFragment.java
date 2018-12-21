@@ -18,7 +18,6 @@ Modifications (C) 2018 Jan K Szymanski
 package com.plweegie.android.telladog.camera;
 
 import android.app.Activity;
-import android.app.Dialog;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -39,7 +38,6 @@ import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
-import android.media.Image;
 import android.media.ImageReader;
 import android.os.Bundle;
 import android.os.Environment;
@@ -47,10 +45,8 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -75,17 +71,15 @@ import com.plweegie.android.telladog.MyApp;
 import com.plweegie.android.telladog.R;
 import com.plweegie.android.telladog.data.DogPrediction;
 import com.plweegie.android.telladog.data.PredictionRepository;
+import com.plweegie.android.telladog.ui.CameraErrorDialog;
 import com.plweegie.android.telladog.ui.FragmentSwitchListener;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Semaphore;
@@ -96,7 +90,7 @@ import javax.inject.Inject;
 import kotlin.Pair;
 
 
-public class CameraFragment extends Fragment {
+public class CameraFragment extends Fragment implements ImageSaver.ImageSaverListener {
 
     private static final String TAG = "CameraFragment";
 
@@ -235,8 +229,10 @@ public class CameraFragment extends Fragment {
                         );
 
                         mRepository.add(predictionToSave);
-                        mBackgroundHandler.post(
-                                new ImageSaver(getActivity(), imageReader.acquireNextImage(), mOutputFile));
+
+                        ImageSaver imageSaver = new ImageSaver(mOutputFile, imageReader.acquireNextImage());
+                        imageSaver.setListener(CameraFragment.this);
+                        mBackgroundHandler.post(imageSaver);
                     } else {
                         Toast.makeText(getActivity(), "Failed to save image", Toast.LENGTH_SHORT)
                             .show();
@@ -317,7 +313,7 @@ public class CameraFragment extends Fragment {
         // largest of those not big enough.
 
         if (bigEnough.size() > 0) {
-            return Collections.min(bigEnough, new CompareSizesByArea());
+            return Collections.min(bigEnough, new SizeAreaComparator());
         } else {
             return choices[0];
         }
@@ -461,7 +457,7 @@ public class CameraFragment extends Fragment {
                 // // For still image captures, we use the largest available size.
                 Size largest =
                         Collections.max(
-                                Arrays.asList(map.getOutputSizes(ImageFormat.JPEG)), new CompareSizesByArea());
+                                Arrays.asList(map.getOutputSizes(ImageFormat.JPEG)), new SizeAreaComparator());
                 mImageReader =
                         ImageReader.newInstance(
                                 largest.getWidth(), largest.getHeight(), ImageFormat.JPEG, 2);
@@ -513,7 +509,7 @@ public class CameraFragment extends Fragment {
         } catch (NullPointerException e) {
             // Currently an NPE is thrown when the Camera2API is used but not supported on the
             // device this code runs.
-            ErrorDialog.newInstance(getString(R.string.camera_error))
+            CameraErrorDialog.newInstance(getString(R.string.camera_error))
                     .show(getChildFragmentManager(), FRAGMENT_DIALOG);
         }
     }
@@ -883,84 +879,56 @@ public class CameraFragment extends Fragment {
         updateAdapterAsync(predictions);
     }
 
-    private class ImageSaver implements Runnable {
-
-        private final Image mImage;
-        private final File mFile;
-        private final Context mContext;
-
-        ImageSaver(Context context, Image image, File file) {
-            mImage = image;
-            mFile = file;
-            mContext = context;
-        }
-
-        @Override
-        public void run() {
-
-            ByteBuffer buffer = mImage.getPlanes()[0].getBuffer();
-            byte[] bytes = new byte[buffer.remaining()];
-            buffer.get(bytes);
-            FileOutputStream output = null;
-
-            try {
-                output = new FileOutputStream(mFile);
-                output.write(bytes);
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                mImage.close();
-
-                if (output != null) {
-                    try {
-                        output.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                ((Activity) mContext).runOnUiThread(
-                        () -> {
-                            mIndicator.setVisibility(View.GONE);
-                            mFragmentSwitchListener.onDogListFragmentSelect();
-                        });
-            }
-        }
+    @Override
+    public void onImageSaved() {
+        getActivity().runOnUiThread(() -> {
+            mIndicator.setVisibility(View.GONE);
+            mFragmentSwitchListener.onDogListFragmentSelect();
+        });
     }
 
-    /** Compares two {@code Size}s based on their areas. */
-    private static class CompareSizesByArea implements Comparator<Size> {
-
-        @Override
-        public int compare(Size lhs, Size rhs) {
-            // We cast here to ensure the multiplications won't overflow
-            return Long.signum(
-                    (long) lhs.getWidth() * lhs.getHeight() - (long) rhs.getWidth() * rhs.getHeight());
-        }
-    }
-
-    /** Shows an error message dialog. */
-    public static class ErrorDialog extends DialogFragment {
-
-        private static final String ARG_MESSAGE = "message";
-
-        public static ErrorDialog newInstance(String message) {
-            ErrorDialog dialog = new ErrorDialog();
-            Bundle args = new Bundle();
-            args.putString(ARG_MESSAGE, message);
-            dialog.setArguments(args);
-            return dialog;
-        }
-
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            final Activity activity = getActivity();
-            return new AlertDialog.Builder(activity)
-                    .setMessage(getArguments().getString(ARG_MESSAGE))
-                    .setPositiveButton(
-                            android.R.string.ok,
-                            (dialog, i) -> activity.finish())
-                    .create();
-        }
-    }
+//    private class ImageSaver implements Runnable {
+//
+//        private final Image mImage;
+//        private final File mFile;
+//        private final Context mContext;
+//
+//        ImageSaver(Context context, Image image, File file) {
+//            mImage = image;
+//            mFile = file;
+//            mContext = context;
+//        }
+//
+//        @Override
+//        public void run() {
+//
+//            ByteBuffer buffer = mImage.getPlanes()[0].getBuffer();
+//            byte[] bytes = new byte[buffer.remaining()];
+//            buffer.get(bytes);
+//            FileOutputStream output = null;
+//
+//            try {
+//                output = new FileOutputStream(mFile);
+//                output.write(bytes);
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            } finally {
+//                mImage.close();
+//
+//                if (output != null) {
+//                    try {
+//                        output.close();
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//
+//                ((Activity) mContext).runOnUiThread(
+//                        () -> {
+//                            mIndicator.setVisibility(View.GONE);
+//                            mFragmentSwitchListener.onDogListFragmentSelect();
+//                        });
+//            }
+//        }
+//    }
 }

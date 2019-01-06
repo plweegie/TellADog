@@ -4,14 +4,20 @@ import android.arch.lifecycle.LiveData
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
-import com.google.firebase.database.DatabaseReference
+import android.util.Log
+import com.google.firebase.database.*
 import com.google.firebase.storage.StorageReference
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.*
 import java.util.concurrent.ExecutorService
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 @Singleton
 class PredictionRepository @Inject constructor(private val mDatabase: PredictionDb,
@@ -29,8 +35,25 @@ class PredictionRepository @Inject constructor(private val mDatabase: Prediction
         executor.execute { mDatabase.predictionDao().updatePrediction(predictionId, syncState) }
     }
 
-    fun delete(predictionId: Long?) {
+    suspend fun delete(predictionId: Long?) {
         executor.execute { mDatabase.predictionDao().deletePrediction(predictionId) }
+
+        predictionId?.run {
+            withContext(Dispatchers.Default) {
+                try {
+                    val result = firebaseDatabase
+                            .orderByChild("timestamp")
+                            .equalTo(this@run.toDouble())
+                            .await()
+
+                    result.children.forEach {
+                        it.ref.removeValue()
+                    }
+                } catch (e: Exception) {
+                    Log.e("PredictionRepository", "Error deleting entry")
+                }
+            }
+        }
     }
 
     fun deleteAll() {
@@ -45,6 +68,20 @@ class PredictionRepository @Inject constructor(private val mDatabase: Prediction
 
         sendToDatabase(prediction)
         sendToStorage(prediction)
+    }
+
+    private suspend fun Query.await(): DataSnapshot {
+        return suspendCoroutine { continuation ->
+            addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    continuation.resume(snapshot)
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                   continuation.resumeWithException(error.toException())
+                }
+            })
+        }
     }
 
     private fun sendToDatabase(prediction: DogPrediction?) {

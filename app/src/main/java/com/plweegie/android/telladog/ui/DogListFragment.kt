@@ -27,6 +27,7 @@ import android.view.*
 import com.plweegie.android.telladog.MainActivity
 import com.plweegie.android.telladog.MyApp
 import com.plweegie.android.telladog.R
+import com.plweegie.android.telladog.R.id.predictions_list
 import com.plweegie.android.telladog.adapters.PhotoGridAdapter
 import com.plweegie.android.telladog.data.DogPrediction
 import com.plweegie.android.telladog.viewmodels.PredictionListViewModel

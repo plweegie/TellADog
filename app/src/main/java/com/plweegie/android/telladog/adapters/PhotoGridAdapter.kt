@@ -14,7 +14,7 @@ import kotlinx.coroutines.*
 class PhotoGridAdapter : RecyclerView.Adapter<PhotoGridAdapter.PhotoGridHolder>() {
 
     interface PhotoGridListener {
-        fun onDeleteClicked(itemId: Long)
+        fun onDeleteClicked(prediction: DogPrediction?)
         fun onSyncClicked(prediction: DogPrediction?)
     }
 
@@ -49,7 +49,7 @@ class PhotoGridAdapter : RecyclerView.Adapter<PhotoGridAdapter.PhotoGridHolder>(
                         "%.1f %%".format(100.0 * (prediction?.accuracy as Float))
 
                 delete_iv.setOnClickListener {
-                    onItemClickListener.onDeleteClicked(prediction.timestamp)
+                    onItemClickListener.onDeleteClicked(prediction)
                 }
                 sync_iv.setOnClickListener {
                     if (prediction.syncState == DogPrediction.SyncState.NOT_SYNCED.value) {

@@ -6,8 +6,10 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
 import com.google.firebase.database.*
+import com.google.firebase.storage.StorageException
 import com.google.firebase.storage.StorageReference
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -31,28 +33,16 @@ class PredictionRepository @Inject constructor(private val mDatabase: Prediction
         executor.execute { mDatabase.predictionDao().insertPrediction(prediction) }
     }
 
-    fun update(predictionId: Long?, syncState: Int) {
+    private fun update(predictionId: Long?, syncState: Int) {
         executor.execute { mDatabase.predictionDao().updatePrediction(predictionId, syncState) }
     }
 
-    suspend fun delete(predictionId: Long?) {
-        executor.execute { mDatabase.predictionDao().deletePrediction(predictionId) }
+    suspend fun delete(prediction: DogPrediction?) {
+        executor.execute { mDatabase.predictionDao().deletePrediction(prediction?.timestamp) }
 
-        predictionId?.run {
-            withContext(Dispatchers.Default) {
-                try {
-                    val result = firebaseDatabase
-                            .orderByChild("timestamp")
-                            .equalTo(this@run.toDouble())
-                            .await()
-
-                    result.children.forEach {
-                        it.ref.removeValue()
-                    }
-                } catch (e: Exception) {
-                    Log.e("PredictionRepository", "Error deleting entry")
-                }
-            }
+        prediction?.run {
+            deleteFromDatabase(timestamp!!)
+            deleteFromStorage(imageUri!!)
         }
     }
 
@@ -62,8 +52,8 @@ class PredictionRepository @Inject constructor(private val mDatabase: Prediction
 
     fun syncToFirebase(prediction: DogPrediction?) {
         prediction?.syncState = DogPrediction.SyncState.SYNCING.value
-        prediction?.let {
-            update(it.timestamp, it.syncState)
+        prediction?.run {
+            update(timestamp, syncState)
         }
 
         sendToDatabase(prediction)
@@ -92,21 +82,50 @@ class PredictionRepository @Inject constructor(private val mDatabase: Prediction
 
     private fun sendToStorage(prediction: DogPrediction?) {
 
-        if (prediction != null) {
-            val file = Uri.fromFile(File(prediction.imageUri))
+        prediction?.run {
+            val file = Uri.fromFile(File(imageUri))
             val dogImagesReference = firebaseStorage.child(file.lastPathSegment!!)
-            val data = getImageDataFromFile(prediction.imageUri!!)
+            val data = getImageDataFromFile(imageUri!!)
 
             dogImagesReference.putBytes(data)
                     .addOnSuccessListener {
-                        prediction.syncState = DogPrediction.SyncState.SYNCED.value
+                        syncState = DogPrediction.SyncState.SYNCED.value
                     }
                     .addOnFailureListener {
-                        prediction.syncState = DogPrediction.SyncState.NOT_SYNCED.value
+                        syncState = DogPrediction.SyncState.NOT_SYNCED.value
                     }
                     .addOnCompleteListener {
-                        update(prediction.timestamp, prediction.syncState)
+                        update(timestamp, syncState)
                     }
+        }
+    }
+
+    private suspend fun deleteFromDatabase(predictionId: Long) {
+        withContext(Dispatchers.Default) {
+            try {
+                val result = firebaseDatabase
+                        .orderByChild("timestamp")
+                        .equalTo(predictionId.toDouble())
+                        .await()
+
+                result.children.forEach {
+                    it.ref.removeValue()
+                }
+            } catch (e: Exception) {
+                Log.e("PredictionRepository", "Error deleting entry")
+            }
+        }
+    }
+
+    private suspend fun deleteFromStorage(predictionImageUri: String) {
+        val storageChildReference = predictionImageUri.substringAfterLast("/")
+
+        withContext(Dispatchers.Default) {
+            try {
+                firebaseStorage.child(storageChildReference).delete().await()
+            } catch (e: StorageException) {
+                Log.e("PredictionRepository", "Error deleting entry image")
+            }
         }
     }
 

@@ -16,9 +16,9 @@ class PredictionListViewModel(private val repository: PredictionRepository) : Vi
 
     fun getPredictionList(): LiveData<List<DogPrediction>> = mPredictionList
 
-    fun deletePrediction(predictionID: Long) {
+    fun deletePrediction(prediction: DogPrediction?) {
         uiScope.launch {
-            repository.delete(predictionID)
+            repository.delete(prediction)
         }
     }
 

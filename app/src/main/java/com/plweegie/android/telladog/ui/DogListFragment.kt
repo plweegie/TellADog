@@ -27,7 +27,6 @@ import android.view.*
 import com.plweegie.android.telladog.MainActivity
 import com.plweegie.android.telladog.MyApp
 import com.plweegie.android.telladog.R
-import com.plweegie.android.telladog.R.id.predictions_list
 import com.plweegie.android.telladog.adapters.PhotoGridAdapter
 import com.plweegie.android.telladog.data.DogPrediction
 import com.plweegie.android.telladog.viewmodels.PredictionListViewModel
@@ -59,9 +58,10 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener {
 
         mFragmentSwitchListener = activity as MainActivity
 
-        mAdapter = PhotoGridAdapter()
-        mAdapter.setHasStableIds(true)
-        mAdapter.onItemClickListener = this
+        mAdapter = PhotoGridAdapter().apply {
+            setHasStableIds(true)
+            onItemClickListener = this@DogListFragment
+        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
@@ -69,9 +69,12 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val layoutManager = GridLayoutManager(activity, 1)
-        predictions_list.layoutManager = layoutManager
-        predictions_list.setHasFixedSize(true)
-        predictions_list.adapter = mAdapter
+
+        predictions_list.apply {
+            this.layoutManager = layoutManager
+            setHasFixedSize(true)
+            adapter = mAdapter
+        }
 
         mViewModel.getPredictionList().observe(viewLifecycleOwner, Observer {
             if (it != null) {
@@ -99,8 +102,8 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener {
         }
     }
 
-    override fun onDeleteClicked(itemId: Long) {
-        mViewModel.deletePrediction(itemId)
+    override fun onDeleteClicked(prediction: DogPrediction?) {
+        mViewModel.deletePrediction(prediction)
     }
 
     override fun onSyncClicked(prediction: DogPrediction?) {

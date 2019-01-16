@@ -13,4 +13,10 @@
     <string name="change_to_camera">Predict in live preview</string>
     <string name="change_to_list">Predict from saved pictures</string>
     <string name="save_pic_data">Save prediction</string>
+
+    <!-- Dialogs -->
+    <string name="firebase_warn">This will make your picture visible to the app developers. Are you sure?</string>
+    <string name="firebase_check">Do not ask me again</string>
+    <string name="dialog_yes">Yes</string>
+    <string name="dialog_no">No</string>
 </resources>

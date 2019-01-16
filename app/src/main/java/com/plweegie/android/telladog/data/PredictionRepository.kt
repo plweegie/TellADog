@@ -50,14 +50,17 @@ class PredictionRepository @Inject constructor(private val mDatabase: Prediction
         executor.execute { mDatabase.predictionDao().deleteAll() }
     }
 
-    fun syncToFirebase(prediction: DogPrediction?) {
+    fun syncToFirebase(prediction: DogPrediction?, isImageSyncAllowed: Boolean) {
         prediction?.syncState = DogPrediction.SyncState.SYNCING.value
         prediction?.run {
             update(timestamp, syncState)
         }
 
         sendToDatabase(prediction)
-        sendToStorage(prediction)
+
+        if (isImageSyncAllowed) {
+            sendToStorage(prediction)
+        }
     }
 
     private suspend fun Query.await(): DataSnapshot {

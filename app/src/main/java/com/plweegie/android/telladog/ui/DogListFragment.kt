@@ -20,6 +20,8 @@ import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
 import android.os.Bundle
+import android.preference.PreferenceManager
+import android.support.v4.app.DialogFragment
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentActivity
 import android.support.v7.widget.GridLayoutManager
@@ -35,7 +37,7 @@ import kotlinx.android.synthetic.main.fragment_dog_list.*
 import javax.inject.Inject
 
 
-class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener {
+class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, FirebaseDialog.FirebaseDialogListener {
 
     @Inject
     lateinit var mViewModelFactory: PredictionListViewModelFactory
@@ -43,6 +45,8 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener {
     private lateinit var mViewModel: PredictionListViewModel
     private lateinit var mAdapter: PhotoGridAdapter
     private lateinit var mFragmentSwitchListener: FragmentSwitchListener
+
+    private var currentPrediction: DogPrediction? = null
 
     override fun onAttach(context: Context?) {
         (activity?.application as MyApp).mAppComponent.inject(this)
@@ -107,11 +111,40 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener {
     }
 
     override fun onSyncClicked(prediction: DogPrediction?) {
-        mViewModel.syncToFirebase(prediction)
+        PreferenceManager.getDefaultSharedPreferences(activity).run {
+            if (contains(FIREBASE_SYNC_PREFERENCE)) {
+                mViewModel.syncToFirebase(prediction, getBoolean(FIREBASE_SYNC_PREFERENCE, false))
+            } else {
+                currentPrediction = prediction
+                val firebaseDialog = FirebaseDialog().apply {
+                    listener = this@DogListFragment
+                }
+                firebaseDialog.show(fragmentManager, "FirebaseDialog")
+            }
+         }
+    }
+
+    override fun onPositiveClick(dialog: DialogFragment, isPermanent: Boolean) {
+        if (isPermanent) {
+            PreferenceManager.getDefaultSharedPreferences(activity).edit()
+                    .putBoolean(FIREBASE_SYNC_PREFERENCE, true)
+                    .apply()
+        }
+
+        mViewModel.syncToFirebase(currentPrediction, true)
+    }
+
+    override fun onNegativeClick(dialog: DialogFragment, isPermanent: Boolean) {
+        if (isPermanent) {
+            PreferenceManager.getDefaultSharedPreferences(activity).edit()
+                    .putBoolean(FIREBASE_SYNC_PREFERENCE, false)
+                    .apply()
+        }
     }
 
     companion object {
         const val TAG = "DogListFragment"
+        const val FIREBASE_SYNC_PREFERENCE = "firebase_sync_preference"
 
         fun newInstance(): DogListFragment = DogListFragment()
     }

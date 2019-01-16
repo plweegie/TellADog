@@ -22,8 +22,8 @@ class PredictionListViewModel(private val repository: PredictionRepository) : Vi
         }
     }
 
-    fun syncToFirebase(prediction: DogPrediction?) {
-        repository.syncToFirebase(prediction)
+    fun syncToFirebase(prediction: DogPrediction?, isImageSyncAllowed: Boolean) {
+        repository.syncToFirebase(prediction, isImageSyncAllowed)
     }
 
     override fun onCleared() {

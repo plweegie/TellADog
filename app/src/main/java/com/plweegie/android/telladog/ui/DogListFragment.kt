@@ -47,6 +47,7 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
     private lateinit var mFragmentSwitchListener: FragmentSwitchListener
 
     private var currentPrediction: DogPrediction? = null
+    private var userId: String? = null
 
     override fun onAttach(context: Context?) {
         (activity?.application as MyApp).mAppComponent.inject(this)
@@ -66,6 +67,8 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
             setHasStableIds(true)
             onItemClickListener = this@DogListFragment
         }
+
+        userId = arguments?.getString(USER_ID_ARG)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
@@ -107,13 +110,13 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
     }
 
     override fun onDeleteClicked(prediction: DogPrediction?) {
-        mViewModel.deletePrediction(prediction)
+        mViewModel.deletePrediction(prediction, userId!!)
     }
 
     override fun onSyncClicked(prediction: DogPrediction?) {
         PreferenceManager.getDefaultSharedPreferences(activity).run {
             if (contains(FIREBASE_SYNC_PREFERENCE)) {
-                mViewModel.syncToFirebase(prediction, getBoolean(FIREBASE_SYNC_PREFERENCE, false))
+                mViewModel.syncToFirebase(prediction, userId!!, getBoolean(FIREBASE_SYNC_PREFERENCE, false))
             } else {
                 currentPrediction = prediction
                 val firebaseDialog = FirebaseDialog().apply {
@@ -131,7 +134,7 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
                     .apply()
         }
 
-        mViewModel.syncToFirebase(currentPrediction, true)
+        mViewModel.syncToFirebase(currentPrediction, userId!!, true)
     }
 
     override fun onNegativeClick(dialog: DialogFragment, isPermanent: Boolean) {
@@ -146,6 +149,11 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
         const val TAG = "DogListFragment"
         const val FIREBASE_SYNC_PREFERENCE = "firebase_sync_preference"
 
-        fun newInstance(): DogListFragment = DogListFragment()
+        private const val USER_ID_ARG = "user_id_arg"
+
+        fun newInstance(userId: String?): DogListFragment {
+            val bundle = Bundle().apply { putString(USER_ID_ARG, userId) }
+            return DogListFragment().apply { arguments = bundle }
+        }
     }
 }

@@ -1,12 +1,12 @@
 package com.plweegie.android.telladog.di
 
 import android.os.Build
+import com.google.firebase.ml.common.modeldownload.FirebaseCloudModelSource
+import com.google.firebase.ml.common.modeldownload.FirebaseLocalModelSource
+import com.google.firebase.ml.common.modeldownload.FirebaseModelDownloadConditions
 import com.google.firebase.ml.custom.FirebaseModelDataType
 import com.google.firebase.ml.custom.FirebaseModelInputOutputOptions
 import com.google.firebase.ml.custom.FirebaseModelOptions
-import com.google.firebase.ml.custom.model.FirebaseCloudModelSource
-import com.google.firebase.ml.custom.model.FirebaseLocalModelSource
-import com.google.firebase.ml.custom.model.FirebaseModelDownloadConditions
 import dagger.Module
 import dagger.Provides
 import javax.inject.Singleton

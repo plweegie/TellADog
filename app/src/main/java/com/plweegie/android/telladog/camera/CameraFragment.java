@@ -65,7 +65,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.plweegie.android.telladog.ImageClassifier;
-import com.plweegie.android.telladog.InferenceAdapter;
+import com.plweegie.android.telladog.adapters.InferenceAdapter;
 import com.plweegie.android.telladog.MainActivity;
 import com.plweegie.android.telladog.MyApp;
 import com.plweegie.android.telladog.R;

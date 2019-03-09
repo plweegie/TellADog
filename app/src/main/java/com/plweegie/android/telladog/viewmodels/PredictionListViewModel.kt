@@ -16,14 +16,14 @@ class PredictionListViewModel(private val repository: PredictionRepository) : Vi
 
     fun getPredictionList(): LiveData<List<DogPrediction>> = mPredictionList
 
-    fun deletePrediction(prediction: DogPrediction?) {
+    fun deletePrediction(prediction: DogPrediction?, userId: String) {
         uiScope.launch {
-            repository.delete(prediction)
+            repository.delete(prediction, userId)
         }
     }
 
-    fun syncToFirebase(prediction: DogPrediction?, isImageSyncAllowed: Boolean) {
-        repository.syncToFirebase(prediction, isImageSyncAllowed)
+    fun syncToFirebase(prediction: DogPrediction?, userId: String, isImageSyncAllowed: Boolean) {
+        repository.syncToFirebase(prediction, userId, isImageSyncAllowed)
     }
 
     override fun onCleared() {

@@ -21,9 +21,10 @@ import android.app.Activity
 import android.graphics.Bitmap
 import android.util.Log
 import com.google.firebase.ml.common.FirebaseMLException
+import com.google.firebase.ml.common.modeldownload.FirebaseCloudModelSource
+import com.google.firebase.ml.common.modeldownload.FirebaseLocalModelSource
+import com.google.firebase.ml.common.modeldownload.FirebaseModelManager
 import com.google.firebase.ml.custom.*
-import com.google.firebase.ml.custom.model.FirebaseCloudModelSource
-import com.google.firebase.ml.custom.model.FirebaseLocalModelSource
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
@@ -79,8 +80,8 @@ class ImageClassifier @Throws(IOException::class) constructor(val mActivity: Act
             DIM_IMG_SIZE_Y * DIM_PIXEL_SIZE)
         imgData.order(ByteOrder.nativeOrder())
 
-        labelProbArray = Array(1, { FloatArray(labelList.size) } )
-        filterLabelProbArray = Array(FILTER_STAGES, { FloatArray(labelList.size) })
+        labelProbArray = Array(1) { FloatArray(labelList.size) }
+        filterLabelProbArray = Array(FILTER_STAGES) { FloatArray(labelList.size) }
     }
 
     fun getPredictions(bitmap: Bitmap): List<Pair<String, Float>>? {
@@ -181,7 +182,7 @@ class ImageClassifier @Throws(IOException::class) constructor(val mActivity: Act
         }
 
         return mapToOutput.toList()
-                .sortedByDescending { (k, v) -> v }
+                .sortedByDescending { (_, v) -> v }
     }
 
 

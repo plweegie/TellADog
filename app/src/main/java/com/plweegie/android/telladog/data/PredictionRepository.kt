@@ -37,12 +37,12 @@ class PredictionRepository @Inject constructor(private val mDatabase: Prediction
         executor.execute { mDatabase.predictionDao().updatePrediction(predictionId, syncState) }
     }
 
-    suspend fun delete(prediction: DogPrediction?) {
+    suspend fun delete(prediction: DogPrediction?, userId: String) {
         executor.execute { mDatabase.predictionDao().deletePrediction(prediction?.timestamp) }
 
         prediction?.run {
-            deleteFromDatabase(timestamp!!)
-            deleteFromStorage(imageUri!!)
+            deleteFromDatabase(timestamp, userId)
+            deleteFromStorage(imageUri!!, userId)
         }
     }
 
@@ -50,16 +50,16 @@ class PredictionRepository @Inject constructor(private val mDatabase: Prediction
         executor.execute { mDatabase.predictionDao().deleteAll() }
     }
 
-    fun syncToFirebase(prediction: DogPrediction?, isImageSyncAllowed: Boolean) {
+    fun syncToFirebase(prediction: DogPrediction?, userId: String, isImageSyncAllowed: Boolean) {
         prediction?.syncState = DogPrediction.SyncState.SYNCING.value
         prediction?.run {
             update(timestamp, syncState)
         }
 
-        sendToDatabase(prediction)
+        sendToDatabase(prediction, userId)
 
         if (isImageSyncAllowed) {
-            sendToStorage(prediction)
+            sendToStorage(prediction, userId)
         }
     }
 
@@ -77,17 +77,24 @@ class PredictionRepository @Inject constructor(private val mDatabase: Prediction
         }
     }
 
-    private fun sendToDatabase(prediction: DogPrediction?) {
+    private fun sendToDatabase(prediction: DogPrediction?, userId: String) {
         val guid = UUID.randomUUID().toString()
 
-        firebaseDatabase.child(guid).setValue(prediction)
+        firebaseDatabase
+                .child("users")
+                .child(userId)
+                .child(guid)
+                .setValue(prediction)
     }
 
-    private fun sendToStorage(prediction: DogPrediction?) {
+    private fun sendToStorage(prediction: DogPrediction?, userId: String) {
 
         prediction?.run {
             val file = Uri.fromFile(File(imageUri))
-            val dogImagesReference = firebaseStorage.child(file.lastPathSegment!!)
+            val dogImagesReference = firebaseStorage
+                    .child("images")
+                    .child(userId)
+                    .child(file.lastPathSegment!!)
             val data = getImageDataFromFile(imageUri!!)
 
             dogImagesReference.putBytes(data)
@@ -103,10 +110,12 @@ class PredictionRepository @Inject constructor(private val mDatabase: Prediction
         }
     }
 
-    private suspend fun deleteFromDatabase(predictionId: Long) {
+    private suspend fun deleteFromDatabase(predictionId: Long, userId: String) {
         withContext(Dispatchers.Default) {
             try {
                 val result = firebaseDatabase
+                        .child("users")
+                        .child(userId)
                         .orderByChild("timestamp")
                         .equalTo(predictionId.toDouble())
                         .await()
@@ -120,12 +129,16 @@ class PredictionRepository @Inject constructor(private val mDatabase: Prediction
         }
     }
 
-    private suspend fun deleteFromStorage(predictionImageUri: String) {
+    private suspend fun deleteFromStorage(predictionImageUri: String, userId: String) {
         val storageChildReference = predictionImageUri.substringAfterLast("/")
 
         withContext(Dispatchers.Default) {
             try {
-                firebaseStorage.child(storageChildReference).delete().await()
+                firebaseStorage
+                        .child("images")
+                        .child(userId)
+                        .child(storageChildReference)
+                        .delete().await()
             } catch (e: StorageException) {
                 Log.e("PredictionRepository", "Error deleting entry image")
             }

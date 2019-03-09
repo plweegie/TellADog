@@ -19,4 +19,9 @@
     <string name="firebase_check">Do not ask me again</string>
     <string name="dialog_yes">Yes</string>
     <string name="dialog_no">No</string>
+
+    <string name="onboarding">Looks like you haven\'t got any dogs saved! Tap the camera icon to start,
+    then save your prediction and see it here.\n\nTip: upload your prediction to our servers using the
+        cloud icon if you want us to improve the accuracy! You can always delete it at any time.</string>
+
 </resources>

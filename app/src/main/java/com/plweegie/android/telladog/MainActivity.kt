@@ -41,7 +41,7 @@ class MainActivity : AppCompatActivity(), FragmentSwitchListener {
         var fragment = supportFragmentManager.findFragmentById(R.id.container)
 
         if (fragment == null) {
-            fragment = CameraFragment.newInstance()
+            fragment = DogListFragment.newInstance(currentUser?.uid)
             supportFragmentManager.beginTransaction()
                     .replace(R.id.container, fragment)
                     .commit()

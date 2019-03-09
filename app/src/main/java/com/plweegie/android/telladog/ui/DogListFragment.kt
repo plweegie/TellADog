@@ -84,8 +84,14 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
         }
 
         mViewModel.getPredictionList().observe(viewLifecycleOwner, Observer {
-            if (it != null) {
-                mAdapter.setContent(it)
+
+            it?.run {
+                onboarding_tv.visibility = View.GONE
+                mAdapter.setContent(this)
+
+                if (this.isEmpty()) {
+                    onboarding_tv.visibility = View.VISIBLE
+                }
             }
         })
 

@@ -12,7 +12,7 @@
         android:layout_weight="3"
         android:layout_gravity="center_horizontal" />
 
-    <android.support.v7.widget.RecyclerView
+    <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/inference_rv"
         android:background="@drawable/dog_label_rect"
         android:layout_width="0dp"

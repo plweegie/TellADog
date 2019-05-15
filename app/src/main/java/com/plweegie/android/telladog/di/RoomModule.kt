@@ -1,7 +1,7 @@
 package com.plweegie.android.telladog.di
 
 import android.app.Application
-import android.arch.persistence.room.Room
+import androidx.room.Room
 import com.plweegie.android.telladog.data.PredictionDb
 import com.plweegie.android.telladog.data.PredictionRepository
 import com.plweegie.android.telladog.viewmodels.PredictionListViewModelFactory

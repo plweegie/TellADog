@@ -16,16 +16,16 @@ limitations under the License.
 
 package com.plweegie.android.telladog.ui
 
-import android.arch.lifecycle.Observer
-import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
 import android.os.Bundle
 import android.preference.PreferenceManager
-import android.support.v4.app.DialogFragment
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentActivity
-import android.support.v7.widget.GridLayoutManager
 import android.view.*
+import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
+import androidx.recyclerview.widget.GridLayoutManager
 import com.plweegie.android.telladog.MainActivity
 import com.plweegie.android.telladog.MyApp
 import com.plweegie.android.telladog.R

@@ -1,12 +1,11 @@
 package com.plweegie.android.telladog.data
 
-import android.arch.lifecycle.LiveData
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
+import androidx.lifecycle.LiveData
 import com.google.firebase.database.*
-import com.google.firebase.storage.StorageException
 import com.google.firebase.storage.StorageReference
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
@@ -139,7 +138,7 @@ class PredictionRepository @Inject constructor(private val mDatabase: Prediction
                         .child(userId)
                         .child(storageChildReference)
                         .delete().await()
-            } catch (e: StorageException) {
+            } catch (e: Throwable) {
                 Log.e("PredictionRepository", "Error deleting entry image")
             }
         }

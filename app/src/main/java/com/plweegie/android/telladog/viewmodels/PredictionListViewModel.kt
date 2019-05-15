@@ -1,7 +1,7 @@
 package com.plweegie.android.telladog.viewmodels
 
-import android.arch.lifecycle.LiveData
-import android.arch.lifecycle.ViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.ViewModel
 import com.plweegie.android.telladog.data.DogPrediction
 import com.plweegie.android.telladog.data.PredictionRepository
 import kotlinx.coroutines.*

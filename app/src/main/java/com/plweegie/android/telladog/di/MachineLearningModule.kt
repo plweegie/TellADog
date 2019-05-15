@@ -1,9 +1,7 @@
 package com.plweegie.android.telladog.di
 
 import android.os.Build
-import com.google.firebase.ml.common.modeldownload.FirebaseCloudModelSource
-import com.google.firebase.ml.common.modeldownload.FirebaseLocalModelSource
-import com.google.firebase.ml.common.modeldownload.FirebaseModelDownloadConditions
+import com.google.firebase.ml.common.modeldownload.*
 import com.google.firebase.ml.custom.FirebaseModelDataType
 import com.google.firebase.ml.custom.FirebaseModelInputOutputOptions
 import com.google.firebase.ml.custom.FirebaseModelOptions
@@ -29,8 +27,8 @@ class MachineLearningModule(private val mCloudModelName: String, private val mLo
 
     @Provides
     @Singleton
-    fun provideMLCloudSource(conditions: FirebaseModelDownloadConditions): FirebaseCloudModelSource =
-            FirebaseCloudModelSource.Builder(mCloudModelName)
+    fun provideMLCloudSource(conditions: FirebaseModelDownloadConditions): FirebaseRemoteModel =
+            FirebaseRemoteModel.Builder(mCloudModelName)
                     .enableModelUpdates(true)
                     .setInitialDownloadConditions(conditions)
                     .setUpdatesDownloadConditions(conditions)
@@ -38,8 +36,8 @@ class MachineLearningModule(private val mCloudModelName: String, private val mLo
 
     @Provides
     @Singleton
-    fun provideMLLocalSource(): FirebaseLocalModelSource =
-            FirebaseLocalModelSource.Builder("{$mCloudModelName}_local")
+    fun provideMLLocalSource(): FirebaseLocalModel =
+            FirebaseLocalModel.Builder("{$mCloudModelName}_local")
                     .setAssetFilePath(mLocalModelName)
                     .build()
 
@@ -47,7 +45,7 @@ class MachineLearningModule(private val mCloudModelName: String, private val mLo
     @Singleton
     fun provideMLOptions(): FirebaseModelOptions =
             FirebaseModelOptions.Builder()
-                    .setCloudModelName(mCloudModelName)
+                    .setRemoteModelName(mCloudModelName)
                     .setLocalModelName("{$mCloudModelName}_local")
                     .build()
 

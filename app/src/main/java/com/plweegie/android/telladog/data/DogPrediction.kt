@@ -1,6 +1,6 @@
 package com.plweegie.android.telladog.data
 
-import android.arch.persistence.room.*
+import androidx.room.*
 
 @Entity(tableName = "predictions", indices = [(Index("timestamp"))])
 data class DogPrediction(@PrimaryKey(autoGenerate = true) val id: Long?,

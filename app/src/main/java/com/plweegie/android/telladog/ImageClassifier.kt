@@ -21,9 +21,7 @@ import android.app.Activity
 import android.graphics.Bitmap
 import android.util.Log
 import com.google.firebase.ml.common.FirebaseMLException
-import com.google.firebase.ml.common.modeldownload.FirebaseCloudModelSource
-import com.google.firebase.ml.common.modeldownload.FirebaseLocalModelSource
-import com.google.firebase.ml.common.modeldownload.FirebaseModelManager
+import com.google.firebase.ml.common.modeldownload.*
 import com.google.firebase.ml.custom.*
 import java.io.BufferedReader
 import java.io.IOException
@@ -44,11 +42,9 @@ class ImageClassifier @Throws(IOException::class) constructor(val mActivity: Act
     private var mFirebaseInterpreter: FirebaseModelInterpreter? = null
 
     @Inject
-    lateinit var mCloudSource: FirebaseCloudModelSource
-
+    lateinit var mCloudSource: FirebaseRemoteModel
     @Inject
-    lateinit var mLocalSource: FirebaseLocalModelSource
-
+    lateinit var mLocalSource: FirebaseLocalModel
     @Inject
     lateinit var mModelOptions: FirebaseModelOptions
 
@@ -69,8 +65,8 @@ class ImageClassifier @Throws(IOException::class) constructor(val mActivity: Act
         (mActivity.application as MyApp).machineLearningComponent.inject(this)
 
         FirebaseModelManager.getInstance().apply {
-            registerCloudModelSource(mCloudSource)
-            registerLocalModelSource(mLocalSource)
+            registerRemoteModel(mCloudSource)
+            registerLocalModel(mLocalSource)
         }
         
         labelList = loadLabelList(mActivity)

@@ -640,9 +640,14 @@ public class CameraFragment extends Fragment implements ImageSaver.ImageSaverLis
             SurfaceTexture texture = mTextureView.getSurfaceTexture();
             assert texture != null;
 
-            mTextureView.setOnClickListener(view -> {
-                if (mRecyclerView.getVisibility() == View.VISIBLE && mTextView != null) {
-                    mRecyclerView.setVisibility(View.GONE);
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mTextureView.setOnClickListener(view -> {
+                        if (mRecyclerView.getVisibility() == View.VISIBLE && mTextView != null) {
+                            mRecyclerView.setVisibility(View.GONE);
+                        }
+                    });
                 }
             });
 

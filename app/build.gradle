@@ -68,6 +68,9 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.1.1'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.0.1'
 
+    def camerax_version = "1.0.0-alpha01"
+    implementation "androidx.camera:camera-core:${camerax_version}"
+
     implementation 'androidx.room:room-runtime:2.0.0'
     implementation 'androidx.lifecycle:lifecycle-common-java8:2.0.0'
     implementation 'androidx.lifecycle:lifecycle-extensions:2.0.0'

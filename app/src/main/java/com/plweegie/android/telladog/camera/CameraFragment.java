@@ -892,49 +892,4 @@ public class CameraFragment extends Fragment implements ImageSaver.ImageSaverLis
             mFragmentSwitchListener.onDogListFragmentSelect();
         });
     }
-
-//    private class ImageSaver implements Runnable {
-//
-//        private final Image mImage;
-//        private final File mFile;
-//        private final Context mContext;
-//
-//        ImageSaver(Context context, Image image, File file) {
-//            mImage = image;
-//            mFile = file;
-//            mContext = context;
-//        }
-//
-//        @Override
-//        public void run() {
-//
-//            ByteBuffer buffer = mImage.getPlanes()[0].getBuffer();
-//            byte[] bytes = new byte[buffer.remaining()];
-//            buffer.get(bytes);
-//            FileOutputStream output = null;
-//
-//            try {
-//                output = new FileOutputStream(mFile);
-//                output.write(bytes);
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            } finally {
-//                mImage.close();
-//
-//                if (output != null) {
-//                    try {
-//                        output.close();
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//
-//                ((Activity) mContext).runOnUiThread(
-//                        () -> {
-//                            mIndicator.setVisibility(View.GONE);
-//                            mFragmentSwitchListener.onDogListFragmentSelect();
-//                        });
-//            }
-//        }
-//    }
 }

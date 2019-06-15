@@ -21,8 +21,13 @@ import android.app.Activity
 import android.graphics.Bitmap
 import android.util.Log
 import com.google.firebase.ml.common.FirebaseMLException
-import com.google.firebase.ml.common.modeldownload.*
-import com.google.firebase.ml.custom.*
+import com.google.firebase.ml.common.modeldownload.FirebaseLocalModel
+import com.google.firebase.ml.common.modeldownload.FirebaseModelManager
+import com.google.firebase.ml.common.modeldownload.FirebaseRemoteModel
+import com.google.firebase.ml.custom.FirebaseModelInputOutputOptions
+import com.google.firebase.ml.custom.FirebaseModelInputs
+import com.google.firebase.ml.custom.FirebaseModelInterpreter
+import com.google.firebase.ml.custom.FirebaseModelOptions
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader

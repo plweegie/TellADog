@@ -1,7 +1,9 @@
 package com.plweegie.android.telladog.di
 
 import android.os.Build
-import com.google.firebase.ml.common.modeldownload.*
+import com.google.firebase.ml.common.modeldownload.FirebaseLocalModel
+import com.google.firebase.ml.common.modeldownload.FirebaseModelDownloadConditions
+import com.google.firebase.ml.common.modeldownload.FirebaseRemoteModel
 import com.google.firebase.ml.custom.FirebaseModelDataType
 import com.google.firebase.ml.custom.FirebaseModelInputOutputOptions
 import com.google.firebase.ml.custom.FirebaseModelOptions

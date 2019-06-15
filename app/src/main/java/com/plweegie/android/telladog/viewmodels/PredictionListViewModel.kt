@@ -4,7 +4,10 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import com.plweegie.android.telladog.data.DogPrediction
 import com.plweegie.android.telladog.data.PredictionRepository
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 
 class PredictionListViewModel(private val repository: PredictionRepository) : ViewModel() {

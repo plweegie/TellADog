@@ -24,9 +24,9 @@ import com.plweegie.android.telladog.R
 import kotlinx.android.synthetic.main.inference_list_item.view.*
 
 
-class InferenceAdapter(val context: Context) : RecyclerView.Adapter<InferenceAdapter.InferenceHolder>() {
+class InferenceAdapter(private val context: Context) : RecyclerView.Adapter<InferenceAdapter.InferenceHolder>() {
 
-    private var mLabels: MutableList<Pair<String, Float>>  = mutableListOf()
+    private var mLabels: MutableList<Pair<String, Float>> = mutableListOf()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): InferenceHolder {
         val inflater = LayoutInflater.from(context)
@@ -44,13 +44,12 @@ class InferenceAdapter(val context: Context) : RecyclerView.Adapter<InferenceAda
         notifyDataSetChanged()
     }
 
-    class InferenceHolder(val inflater: LayoutInflater, val parent: ViewGroup?, val layoutResId: Int)
+    class InferenceHolder(inflater: LayoutInflater, parent: ViewGroup?, layoutResId: Int)
         : RecyclerView.ViewHolder(inflater.inflate(layoutResId, parent, false)) {
 
         fun bind(prediction: Pair<String, Float>) {
             itemView.breed_tv.text = prediction.first
             itemView.confidence_tv.text = "%.1f %%".format(100.0 * prediction.second)
         }
-
     }
 }

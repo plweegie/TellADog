@@ -1,10 +1,10 @@
 package com.plweegie.android.telladog.ui
 
+import android.app.AlertDialog
 import android.app.Dialog
 import android.os.Bundle
-import android.app.AlertDialog
-import androidx.core.content.res.ResourcesCompat
 import android.view.LayoutInflater
+import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.DialogFragment
 import com.plweegie.android.telladog.R
 import kotlinx.android.synthetic.main.dialog_firebase.view.*

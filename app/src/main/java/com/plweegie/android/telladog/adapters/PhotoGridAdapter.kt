@@ -8,7 +8,10 @@ import com.plweegie.android.telladog.R
 import com.plweegie.android.telladog.data.DogPrediction
 import com.plweegie.android.telladog.utils.ThumbnailLoader
 import kotlinx.android.synthetic.main.grid_item.view.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 class PhotoGridAdapter : RecyclerView.Adapter<PhotoGridAdapter.PhotoGridHolder>() {
@@ -39,7 +42,7 @@ class PhotoGridAdapter : RecyclerView.Adapter<PhotoGridAdapter.PhotoGridHolder>(
         notifyDataSetChanged()
     }
 
-    inner class PhotoGridHolder(private val inflater: LayoutInflater, private val parent: ViewGroup, private val layoutResId: Int) :
+    inner class PhotoGridHolder(inflater: LayoutInflater, parent: ViewGroup, layoutResId: Int) :
             RecyclerView.ViewHolder(inflater.inflate(layoutResId, parent, false)) {
 
         fun bind(prediction: DogPrediction?) {

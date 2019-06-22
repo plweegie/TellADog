@@ -43,6 +43,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
@@ -470,6 +471,11 @@ public class CameraFragment extends Fragment implements ImageSaver.ImageSaverLis
                 // noinspection ConstantConditions
         /* Orientation of the camera sensor */
                 mSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
+
+                PreferenceManager.getDefaultSharedPreferences(getActivity()).edit()
+                        .putInt(MainActivity.ORIENTATION_PREFERENCE, mSensorOrientation)
+                        .apply();
+
                 boolean swappedDimensions = false;
                 switch (displayRotation) {
                     case Surface.ROTATION_0:
@@ -865,13 +871,21 @@ public class CameraFragment extends Fragment implements ImageSaver.ImageSaverLis
     /** Classifies a frame from the preview stream. */
     private void classifyFrame() {
         if (mClassifier == null || getActivity() == null || mCameraDevice == null) {
-            showToast("Uninitialized Classifier or invalid context.");
+            showToast("");
             return;
         }
+
+        Matrix matrix = new Matrix();
+        matrix.postRotate(mSensorOrientation);
+
         Bitmap bitmap =
                 mTextureView.getBitmap(ImageClassifier.DIM_IMG_SIZE_X, ImageClassifier.DIM_IMG_SIZE_Y);
-        List<Pair<String, Float>> predictions = mClassifier.getPredictions(bitmap);
+        Bitmap rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0,
+                ImageClassifier.DIM_IMG_SIZE_X, ImageClassifier.DIM_IMG_SIZE_Y, matrix, true);
+        List<Pair<String, Float>> predictions = mClassifier.getPredictions(rotatedBitmap);
+
         bitmap.recycle();
+        rotatedBitmap.recycle();
 
         Pair<String, Float> topPrediction = predictions.get(0);
         mTopPrediction = topPrediction;

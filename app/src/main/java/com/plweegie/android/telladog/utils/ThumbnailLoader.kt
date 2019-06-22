@@ -2,6 +2,7 @@ package com.plweegie.android.telladog.utils
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
 
 
 class ThumbnailLoader {
@@ -27,7 +28,10 @@ class ThumbnailLoader {
             return inSampleSize
         }
 
-        fun decodeBitmapFromFile(fileAbsolutePath: String?, reqWidth: Int, reqHeight: Int): Bitmap? {
+        fun decodeBitmapFromFile(fileAbsolutePath: String?,
+                                 reqWidth: Int, reqHeight: Int, orientation: Int): Bitmap? {
+
+            val matrix = Matrix().apply { postRotate(orientation.toFloat()) }
 
             val options = BitmapFactory.Options()
             options.inJustDecodeBounds = true
@@ -36,7 +40,10 @@ class ThumbnailLoader {
                 BitmapFactory.decodeFile(fileAbsolutePath, options)
                 options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight)
                 options.inJustDecodeBounds = false
-                BitmapFactory.decodeFile(fileAbsolutePath, options)
+
+                val bitmap = BitmapFactory.decodeFile(fileAbsolutePath, options)
+                return Bitmap.createBitmap(bitmap, 0, 0,
+                        bitmap.width, bitmap.height, matrix, true)
             } else {
                 null
             }

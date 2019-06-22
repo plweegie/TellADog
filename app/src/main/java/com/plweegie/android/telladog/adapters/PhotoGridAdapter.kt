@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 
-class PhotoGridAdapter : RecyclerView.Adapter<PhotoGridAdapter.PhotoGridHolder>() {
+class PhotoGridAdapter(private val orientation: Int) : RecyclerView.Adapter<PhotoGridAdapter.PhotoGridHolder>() {
 
     interface PhotoGridListener {
         fun onDeleteClicked(prediction: DogPrediction?)
@@ -70,7 +70,8 @@ class PhotoGridAdapter : RecyclerView.Adapter<PhotoGridAdapter.PhotoGridHolder>(
 
             GlobalScope.launch(Dispatchers.Main) {
                 val bitmap = withContext(Dispatchers.Default) {
-                    ThumbnailLoader.decodeBitmapFromFile(prediction?.imageUri, 100, 100)
+                    ThumbnailLoader.decodeBitmapFromFile(prediction?.imageUri,
+                            100, 100, orientation)
                 }
 
                 itemView.thumbnail_imageview.setImageBitmap(bitmap)

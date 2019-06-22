@@ -63,7 +63,10 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
 
         mFragmentSwitchListener = activity as MainActivity
 
-        mAdapter = PhotoGridAdapter().apply {
+        val orientation = PreferenceManager.getDefaultSharedPreferences(activity)
+                .getInt(MainActivity.ORIENTATION_PREFERENCE, 0)
+
+        mAdapter = PhotoGridAdapter(orientation).apply {
             setHasStableIds(true)
             onItemClickListener = this@DogListFragment
         }

@@ -8,4 +8,10 @@
         android:icon="@drawable/ic_videocam_24dp"
         app:showAsAction="ifRoom" />
 
+    <item
+        android:id="@+id/open_device_gallery"
+        android:title="@string/predict_from_gallery"
+        android:icon="@drawable/ic_photo_library_24dp"
+        app:showAsAction="ifRoom" />
+
 </menu>

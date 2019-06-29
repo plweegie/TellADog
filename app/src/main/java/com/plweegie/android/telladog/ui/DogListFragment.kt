@@ -16,7 +16,9 @@ limitations under the License.
 
 package com.plweegie.android.telladog.ui
 
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.view.*
@@ -40,11 +42,11 @@ import javax.inject.Inject
 class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, FirebaseDialog.FirebaseDialogListener {
 
     @Inject
-    lateinit var mViewModelFactory: PredictionListViewModelFactory
+    lateinit var viewModelFactory: PredictionListViewModelFactory
 
-    private lateinit var mViewModel: PredictionListViewModel
-    private lateinit var mAdapter: PhotoGridAdapter
-    private lateinit var mFragmentSwitchListener: FragmentSwitchListener
+    private lateinit var viewModel: PredictionListViewModel
+    private lateinit var adapter: PhotoGridAdapter
+    private lateinit var fragmentSwitchListener: FragmentSwitchListener
 
     private var currentPrediction: DogPrediction? = null
     private var userId: String? = null
@@ -58,15 +60,15 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
 
-        mViewModel = ViewModelProviders.of(activity as FragmentActivity, mViewModelFactory)
+        viewModel = ViewModelProviders.of(activity as FragmentActivity, viewModelFactory)
                 .get(PredictionListViewModel::class.java)
 
-        mFragmentSwitchListener = activity as MainActivity
+        fragmentSwitchListener = activity as MainActivity
 
         val orientation = PreferenceManager.getDefaultSharedPreferences(activity)
                 .getInt(MainActivity.ORIENTATION_PREFERENCE, 0)
 
-        mAdapter = PhotoGridAdapter(orientation).apply {
+        adapter = PhotoGridAdapter(orientation).apply {
             setHasStableIds(true)
             onItemClickListener = this@DogListFragment
         }
@@ -83,14 +85,14 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
         predictions_list.apply {
             this.layoutManager = layoutManager
             setHasFixedSize(true)
-            adapter = mAdapter
+            adapter = adapter
         }
 
-        mViewModel.getPredictionList().observe(viewLifecycleOwner, Observer {
+        viewModel.getPredictionList().observe(viewLifecycleOwner, Observer {
 
             it?.run {
                 onboarding_tv.visibility = View.GONE
-                mAdapter.setContent(this)
+                adapter.setContent(this)
 
                 if (this.isEmpty()) {
                     onboarding_tv.visibility = View.VISIBLE
@@ -101,6 +103,15 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
         setHasOptionsMenu(true)
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == READ_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+            data?.data?.also { uri ->
+                viewModel.loadImage(uri)
+            }
+        }
+    }
+
     override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
         super.onCreateOptionsMenu(menu, inflater)
         inflater?.inflate(R.menu.fragment_dog_list, menu)
@@ -109,7 +120,11 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         return when (item?.itemId) {
             R.id.change_to_camera -> {
-                mFragmentSwitchListener.onCameraFragmentSelect()
+                fragmentSwitchListener.onCameraFragmentSelect()
+                true
+            }
+            R.id.open_device_gallery -> {
+                openImagePicker()
                 true
             }
             else -> {
@@ -119,13 +134,13 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
     }
 
     override fun onDeleteClicked(prediction: DogPrediction?) {
-        mViewModel.deletePrediction(prediction, userId!!)
+        viewModel.deletePrediction(prediction, userId!!)
     }
 
     override fun onSyncClicked(prediction: DogPrediction?) {
         PreferenceManager.getDefaultSharedPreferences(activity).run {
             if (contains(FIREBASE_SYNC_PREFERENCE)) {
-                mViewModel.syncToFirebase(prediction, userId!!, getBoolean(FIREBASE_SYNC_PREFERENCE, false))
+                viewModel.syncToFirebase(prediction, userId!!, getBoolean(FIREBASE_SYNC_PREFERENCE, false))
             } else {
                 currentPrediction = prediction
                 val firebaseDialog = FirebaseDialog().apply {
@@ -143,7 +158,7 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
                     .apply()
         }
 
-        mViewModel.syncToFirebase(currentPrediction, userId!!, true)
+        viewModel.syncToFirebase(currentPrediction, userId!!, true)
     }
 
     override fun onNegativeClick(dialog: DialogFragment, isPermanent: Boolean) {
@@ -154,11 +169,20 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
         }
     }
 
+    private fun openImagePicker() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "image/*"
+        }
+        startActivityForResult(intent, READ_REQUEST_CODE)
+    }
+
     companion object {
         const val TAG = "DogListFragment"
         const val FIREBASE_SYNC_PREFERENCE = "firebase_sync_preference"
 
         private const val USER_ID_ARG = "user_id_arg"
+        private const val READ_REQUEST_CODE = 142
 
         fun newInstance(userId: String?): DogListFragment {
             val bundle = Bundle().apply { putString(USER_ID_ARG, userId) }

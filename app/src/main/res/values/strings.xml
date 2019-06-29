@@ -11,7 +11,8 @@
 
     <!-- Menus -->
     <string name="change_to_camera">Predict in live preview</string>
-    <string name="change_to_list">Predict from saved pictures</string>
+    <string name="predict_from_gallery">Choose image from gallery</string>
+    <string name="change_to_list">Show predictions</string>
     <string name="save_pic_data">Save prediction</string>
 
     <!-- Dialogs -->

@@ -1,5 +1,6 @@
 package com.plweegie.android.telladog.viewmodels
 
+import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import com.plweegie.android.telladog.data.DogPrediction
@@ -12,12 +13,12 @@ import kotlinx.coroutines.launch
 
 class PredictionListViewModel(private val repository: PredictionRepository) : ViewModel() {
 
-    private val mPredictionList = repository.getAll()
+    private val predictionList = repository.getAll()
 
     private val viewModelJob = Job()
     private val uiScope = CoroutineScope(Dispatchers.Main + viewModelJob)
 
-    fun getPredictionList(): LiveData<List<DogPrediction>> = mPredictionList
+    fun getPredictionList(): LiveData<List<DogPrediction>> = predictionList
 
     fun deletePrediction(prediction: DogPrediction?, userId: String) {
         uiScope.launch {
@@ -27,6 +28,10 @@ class PredictionListViewModel(private val repository: PredictionRepository) : Vi
 
     fun syncToFirebase(prediction: DogPrediction?, userId: String, isImageSyncAllowed: Boolean) {
         repository.syncToFirebase(prediction, userId, isImageSyncAllowed)
+    }
+
+    fun loadImage(uri: Uri) {
+
     }
 
     override fun onCleared() {

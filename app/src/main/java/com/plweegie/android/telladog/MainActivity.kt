@@ -11,7 +11,7 @@ import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.plweegie.android.telladog.camera.CameraFragment
+import com.plweegie.android.telladog.camerax.CameraXFragment
 import com.plweegie.android.telladog.ui.DogListFragment
 import com.plweegie.android.telladog.ui.FragmentSwitchListener
 import kotlinx.android.synthetic.main.activity_main.*
@@ -57,7 +57,7 @@ class MainActivity : AppCompatActivity(), FragmentSwitchListener {
     }
 
     override fun onCameraFragmentSelect() {
-        val cameraFragment = CameraFragment.newInstance()
+        val cameraFragment = CameraXFragment()
         supportFragmentManager.beginTransaction()
                 .setCustomAnimations(R.anim.camera_slide_in, R.anim.camera_slide_out)
                 .replace(R.id.container, cameraFragment)

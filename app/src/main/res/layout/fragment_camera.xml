@@ -4,8 +4,8 @@
     android:layout_height="match_parent"
     android:background="@android:color/black">
 
-    <com.plweegie.android.telladog.camera.AutoFitTextureView
-        android:id="@+id/texture"
+    <TextureView
+        android:id="@+id/view_finder"
         android:layout_width="match_parent"
         android:layout_gravity="center_horizontal"
         android:layout_height="match_parent" />

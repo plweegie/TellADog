@@ -11,11 +11,6 @@ class MyApp : Application() {
                 .myAppModule(MyAppModule(this))
                 .roomModule(RoomModule(DATABASE_NAME))
                 .firebaseModule(FirebaseModule())
-                .build()
-    }
-
-    val machineLearningComponent: MachineLearningComponent by lazy {
-        DaggerMachineLearningComponent.builder()
                 .machineLearningModule(MachineLearningModule(CLOUD_MODEL_NAME, LOCAL_MODEL_NAME))
                 .build()
     }

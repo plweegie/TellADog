@@ -2,6 +2,7 @@ package com.plweegie.android.telladog.utils
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import androidx.camera.core.ImageProxy
 
 
 class ThumbnailLoader {
@@ -40,6 +41,23 @@ class ThumbnailLoader {
             } else {
                 null
             }
+        }
+
+        fun decodeBitmapFromImageProxy(imageProxy: ImageProxy, reqWidth: Int = 224, reqHeight: Int = 224): Bitmap? {
+            val pixelBuffer = imageProxy.planes[0].buffer
+            pixelBuffer.rewind()
+
+            val bytes = ByteArray(pixelBuffer.capacity()).also {
+                pixelBuffer.get(it)
+            }
+
+            val options = BitmapFactory.Options()
+            options.inJustDecodeBounds = true
+
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
+            options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight)
+            options.inJustDecodeBounds = false
+            return BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
         }
     }
 }

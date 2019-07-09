@@ -80,7 +80,6 @@ import com.plweegie.android.telladog.ui.FragmentSwitchListener;
 import com.plweegie.android.telladog.utils.ImageUtils;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -146,6 +145,9 @@ public class CameraFragment extends Fragment implements ImageSaver.ImageSaverLis
     @Inject
     PredictionRepository mRepository;
 
+    @Inject
+    ImageClassifier mClassifier;
+
     private boolean isProcessingFrame = false;
     private boolean isCaptureInProgress = false;
     private byte[][] yuvBytes = new byte[3][];
@@ -161,7 +163,6 @@ public class CameraFragment extends Fragment implements ImageSaver.ImageSaverLis
     private final Object mLock = new Object();
     private boolean mCheckedPermissions = false;
     private TextView mTextView;
-    private ImageClassifier mClassifier;
     private RecyclerView mRecyclerView;
     private InferenceAdapter mAdapter;
     private ProgressBar mIndicator;
@@ -406,11 +407,6 @@ public class CameraFragment extends Fragment implements ImageSaver.ImageSaverLis
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        try {
-            mClassifier = new ImageClassifier(getActivity());
-        } catch (IOException e) {
-            Log.e(TAG, "Failed to initialize an image classifier.");
-        }
         startBackgroundThread();
     }
 

@@ -17,7 +17,7 @@ Modifications (C) 2018 Jan K Szymanski
 
 package com.plweegie.android.telladog
 
-import android.app.Activity
+import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
 import com.google.firebase.ml.common.FirebaseMLException
@@ -39,22 +39,18 @@ import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
 
-class ImageClassifier @Throws(IOException::class) constructor(val mActivity: Activity) {
+class ImageClassifier @Inject constructor(
+        context: Context,
+        cloudSource: FirebaseRemoteModel,
+        localSource: FirebaseLocalModel,
+        modelOptions: FirebaseModelOptions,
+        private val modelInputOutputOptions: FirebaseModelInputOutputOptions
+        ) {
 
     private val intValues = IntArray(DIM_IMG_SIZE_X * DIM_IMG_SIZE_Y)
 
     private var labelList: MutableList<String>
-    private var mFirebaseInterpreter: FirebaseModelInterpreter? = null
-
-    @Inject
-    lateinit var mCloudSource: FirebaseRemoteModel
-    @Inject
-    lateinit var mLocalSource: FirebaseLocalModel
-    @Inject
-    lateinit var mModelOptions: FirebaseModelOptions
-
-    @Inject
-    lateinit var mModelInputOutputOptions: FirebaseModelInputOutputOptions
+    private var firebaseInterpreter: FirebaseModelInterpreter? = null
 
     private var imgData: ByteBuffer
 
@@ -67,15 +63,13 @@ class ImageClassifier @Throws(IOException::class) constructor(val mActivity: Act
     )
 
     init {
-        (mActivity.application as MyApp).machineLearningComponent.inject(this)
-
         FirebaseModelManager.getInstance().apply {
-            registerRemoteModel(mCloudSource)
-            registerLocalModel(mLocalSource)
+            registerRemoteModel(cloudSource)
+            registerLocalModel(localSource)
         }
         
-        labelList = loadLabelList(mActivity)
-        mFirebaseInterpreter = FirebaseModelInterpreter.getInstance(mModelOptions)
+        labelList = loadLabelList(context)
+        firebaseInterpreter = FirebaseModelInterpreter.getInstance(modelOptions)
 
         imgData = ByteBuffer.allocateDirect(4 * DIM_BATCH_SIZE * DIM_IMG_SIZE_X *
             DIM_IMG_SIZE_Y * DIM_PIXEL_SIZE)
@@ -86,7 +80,7 @@ class ImageClassifier @Throws(IOException::class) constructor(val mActivity: Act
     }
 
     fun getPredictions(bitmap: Bitmap): List<Pair<String, Float>>? {
-        if (mFirebaseInterpreter == null) {
+        if (firebaseInterpreter == null) {
             Log.e(TAG, "Image classifier has not been initialized; Skipped.")
             return null
         }
@@ -97,7 +91,7 @@ class ImageClassifier @Throws(IOException::class) constructor(val mActivity: Act
                 .add(imgData)
                 .build()
 
-        mFirebaseInterpreter?.run(inputs, mModelInputOutputOptions)?.addOnSuccessListener {
+        firebaseInterpreter?.run(inputs, modelInputOutputOptions)?.addOnSuccessListener {
             outputs -> labelProbArray = outputs.getOutput<Array<FloatArray>>(0)
         }?.addOnFailureListener {
             Log.e("Interpreter", "Error getting predictions, code ${(it as FirebaseMLException).code}")
@@ -131,14 +125,14 @@ class ImageClassifier @Throws(IOException::class) constructor(val mActivity: Act
     }
 
     fun close() {
-        mFirebaseInterpreter?.close()
-        mFirebaseInterpreter = null
+        firebaseInterpreter?.close()
+        firebaseInterpreter = null
     }
 
     @Throws(IOException::class)
-    private fun loadLabelList(activity: Activity): MutableList<String> {
+    private fun loadLabelList(context: Context): MutableList<String> {
         val labelList = ArrayList<String>()
-        val reader = BufferedReader(InputStreamReader(activity.assets.open(LABEL_PATH)))
+        val reader = BufferedReader(InputStreamReader(context.assets.open(LABEL_PATH)))
 
         var line = reader.readLine()
         while (line != null) {

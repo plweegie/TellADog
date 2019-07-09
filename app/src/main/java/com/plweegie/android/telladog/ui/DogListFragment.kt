@@ -19,6 +19,7 @@ package com.plweegie.android.telladog.ui
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.view.*
@@ -28,14 +29,20 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.GridLayoutManager
+import com.plweegie.android.telladog.ImageClassifier
 import com.plweegie.android.telladog.MainActivity
 import com.plweegie.android.telladog.MyApp
 import com.plweegie.android.telladog.R
 import com.plweegie.android.telladog.adapters.PhotoGridAdapter
 import com.plweegie.android.telladog.data.DogPrediction
+import com.plweegie.android.telladog.utils.ThumbnailLoader
 import com.plweegie.android.telladog.viewmodels.PredictionListViewModel
 import com.plweegie.android.telladog.viewmodels.PredictionListViewModelFactory
 import kotlinx.android.synthetic.main.fragment_dog_list.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import java.util.*
 import javax.inject.Inject
 
 
@@ -44,12 +51,17 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
     @Inject
     lateinit var viewModelFactory: PredictionListViewModelFactory
 
+    @Inject
+    lateinit var classifier: ImageClassifier
+
     private lateinit var viewModel: PredictionListViewModel
     private lateinit var adapter: PhotoGridAdapter
     private lateinit var fragmentSwitchListener: FragmentSwitchListener
+    private var orientation: Int = 0
 
     private var currentPrediction: DogPrediction? = null
     private var userId: String? = null
+
 
     override fun onAttach(context: Context?) {
         (activity?.application as MyApp).mAppComponent.inject(this)
@@ -65,7 +77,7 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
 
         fragmentSwitchListener = activity as MainActivity
 
-        val orientation = PreferenceManager.getDefaultSharedPreferences(activity)
+        orientation = PreferenceManager.getDefaultSharedPreferences(activity)
                 .getInt(MainActivity.ORIENTATION_PREFERENCE, 0)
 
         adapter = PhotoGridAdapter(orientation).apply {
@@ -103,11 +115,18 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
         setHasOptionsMenu(true)
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        classifier.close()
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == READ_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
             data?.data?.also { uri ->
-                viewModel.loadImage(uri)
+                runBlocking {
+                    loadImage(uri)
+                }
             }
         }
     }
@@ -175,6 +194,20 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
             type = "image/*"
         }
         startActivityForResult(intent, READ_REQUEST_CODE)
+    }
+
+    private suspend fun loadImage(uri: Uri) {
+        val bitmap = withContext(Dispatchers.Default) {
+            ThumbnailLoader.decodeBitmapFromUri(activity?.contentResolver, uri,
+                    224, 224, orientation)
+
+        }
+        bitmap?.let {
+            val topPrediction = classifier.getPredictions(it)!![0]
+            val predictionToSave = DogPrediction(topPrediction.first, topPrediction.second,
+                    uri.toString(), Date().time)
+            viewModel.savePredictionFromGallery(predictionToSave)
+        }
     }
 
     companion object {

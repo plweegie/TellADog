@@ -106,7 +106,7 @@ class PredictionRepository @Inject constructor(private val mDatabase: Prediction
     }
 
     private suspend fun deleteFromDatabase(predictionId: Long, userId: String) {
-        withContext(Dispatchers.Default) {
+        withContext(Dispatchers.IO) {
             try {
                 val result = firebaseDatabase
                         .child("users")
@@ -127,7 +127,7 @@ class PredictionRepository @Inject constructor(private val mDatabase: Prediction
     private suspend fun deleteFromStorage(predictionImageUri: String, userId: String) {
         val storageChildReference = predictionImageUri.substringAfterLast("/")
 
-        withContext(Dispatchers.Default) {
+        withContext(Dispatchers.IO) {
             try {
                 firebaseStorage
                         .child("images")

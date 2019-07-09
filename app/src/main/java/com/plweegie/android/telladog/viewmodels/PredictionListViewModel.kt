@@ -1,6 +1,5 @@
 package com.plweegie.android.telladog.viewmodels
 
-import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import com.plweegie.android.telladog.data.DogPrediction
@@ -30,8 +29,8 @@ class PredictionListViewModel(private val repository: PredictionRepository) : Vi
         repository.syncToFirebase(prediction, userId, isImageSyncAllowed)
     }
 
-    fun loadImage(uri: Uri) {
-
+    fun savePredictionFromGallery(prediction: DogPrediction) {
+        repository.add(prediction)
     }
 
     override fun onCleared() {

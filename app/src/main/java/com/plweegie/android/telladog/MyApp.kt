@@ -1,7 +1,9 @@
 package com.plweegie.android.telladog
 
 import android.app.Application
-import com.plweegie.android.telladog.di.*
+import com.plweegie.android.telladog.di.FirebaseModule
+import com.plweegie.android.telladog.di.MachineLearningModule
+import com.plweegie.android.telladog.di.RoomModule
 
 
 class MyApp : Application() {
@@ -11,11 +13,6 @@ class MyApp : Application() {
                 .myAppModule(MyAppModule(this))
                 .roomModule(RoomModule(DATABASE_NAME))
                 .firebaseModule(FirebaseModule())
-                .build()
-    }
-
-    val machineLearningComponent: MachineLearningComponent by lazy {
-        DaggerMachineLearningComponent.builder()
                 .machineLearningModule(MachineLearningModule(CLOUD_MODEL_NAME, LOCAL_MODEL_NAME))
                 .build()
     }

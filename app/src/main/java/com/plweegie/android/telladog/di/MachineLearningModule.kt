@@ -1,6 +1,5 @@
 package com.plweegie.android.telladog.di
 
-import android.os.Build
 import com.google.firebase.ml.common.modeldownload.FirebaseLocalModel
 import com.google.firebase.ml.common.modeldownload.FirebaseModelDownloadConditions
 import com.google.firebase.ml.common.modeldownload.FirebaseRemoteModel
@@ -17,13 +16,7 @@ class MachineLearningModule(private val mCloudModelName: String, private val mLo
     @Provides
     @Singleton
     fun provideMLConditions(): FirebaseModelDownloadConditions {
-        var conditionsBuilder = FirebaseModelDownloadConditions.Builder().requireWifi()
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            conditionsBuilder = conditionsBuilder
-                    .requireCharging()
-                    .requireDeviceIdle()
-        }
+        val conditionsBuilder = FirebaseModelDownloadConditions.Builder().requireWifi()
         return conditionsBuilder.build()
     }
 

@@ -23,6 +23,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.Point;
@@ -38,6 +39,7 @@ import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.media.Image;
 import android.media.ImageReader;
 import android.os.Bundle;
 import android.os.Environment;
@@ -75,9 +77,11 @@ import com.plweegie.android.telladog.data.DogPrediction;
 import com.plweegie.android.telladog.data.PredictionRepository;
 import com.plweegie.android.telladog.ui.CameraErrorDialog;
 import com.plweegie.android.telladog.ui.FragmentSwitchListener;
+import com.plweegie.android.telladog.utils.ImageUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -141,6 +145,17 @@ public class CameraFragment extends Fragment implements ImageSaver.ImageSaverLis
 
     @Inject
     PredictionRepository mRepository;
+
+    private boolean isProcessingFrame = false;
+    private byte[][] yuvBytes = new byte[3][];
+    private int[] rgbBytes = null;
+    private int yRowStride;
+    private Runnable postInferenceCallback;
+    private Runnable imageConverter;
+    private Bitmap rgbFrameBitmap = null;
+    private Bitmap croppedBitmap = null;
+    private Matrix frameToCropTransform;
+    private Matrix cropToFrameTransform;
 
     private final Object mLock = new Object();
     private boolean mRunClassifier = false;
@@ -213,6 +228,7 @@ public class CameraFragment extends Fragment implements ImageSaver.ImageSaverLis
     private HandlerThread mBackgroundThread;
     private Handler mBackgroundHandler;
     private ImageReader mImageReader;
+    private ImageReader mPreviewReader;
     private File mOutputFile;
     private String mImageUrl;
 
@@ -242,7 +258,16 @@ public class CameraFragment extends Fragment implements ImageSaver.ImageSaverLis
                 }
             };
 
+    private final ImageReader.OnImageAvailableListener mOnPreviewAvailableListener =
+            new ImageReader.OnImageAvailableListener() {
+                @Override
+                public void onImageAvailable(ImageReader reader) {
+                    classifyFrame(reader);
+                }
+            };
+
     private CaptureRequest.Builder mPreviewRequestBuilder;
+    private CaptureRequest.Builder mTakePhotoRequestBuilder;
     private CaptureRequest mPreviewRequest;
     private int mState = STATE_PREVIEW;
     private Semaphore mCameraOpenCloseLock = new Semaphore(1);
@@ -500,6 +525,27 @@ public class CameraFragment extends Fragment implements ImageSaver.ImageSaverLis
                 mPreviewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class),
                         DESIRED_PREVIEW_SIZE.getWidth(), DESIRED_PREVIEW_SIZE.getHeight());
 
+                mPreviewReader = ImageReader.newInstance(mPreviewSize.getWidth(), mPreviewSize.getHeight(),
+                        ImageFormat.YUV_420_888, 2);
+                mPreviewReader.setOnImageAvailableListener(mOnPreviewAvailableListener, mBackgroundHandler);
+
+                rgbFrameBitmap = Bitmap.createBitmap(mPreviewSize.getWidth(), mPreviewSize.getHeight(), Bitmap.Config.ARGB_8888);
+                croppedBitmap = Bitmap.createBitmap(
+                        ImageClassifier.DIM_IMG_SIZE_X, ImageClassifier.DIM_IMG_SIZE_Y, Bitmap.Config.ARGB_8888
+                );
+
+                frameToCropTransform = ImageUtils.getTransformationMatrix(
+                        mPreviewSize.getWidth(),
+                        mPreviewSize.getHeight(),
+                        ImageClassifier.DIM_IMG_SIZE_X,
+                        ImageClassifier.DIM_IMG_SIZE_Y,
+                        mSensorOrientation,
+                        true
+                );
+
+                cropToFrameTransform = new Matrix();
+                frameToCropTransform.invert(cropToFrameTransform);
+
                 // We fit the aspect ratio of TextureView to the size of preview we picked.
                 int orientation = getResources().getConfiguration().orientation;
                 if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
@@ -629,7 +675,7 @@ public class CameraFragment extends Fragment implements ImageSaver.ImageSaverLis
                 public void run() {
                     synchronized (mLock) {
                         if (mRunClassifier) {
-                            classifyFrame();
+                            //classifyFrame();
                         }
                     }
 
@@ -665,11 +711,13 @@ public class CameraFragment extends Fragment implements ImageSaver.ImageSaverLis
 
             // We set up a CaptureRequest.Builder with the output Surface.
             mPreviewRequestBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+            mPreviewRequestBuilder.addTarget(mPreviewReader.getSurface());
             mPreviewRequestBuilder.addTarget(surface);
+            mPreviewRequestBuilder.removeTarget(mImageReader.getSurface());
 
             // Here, we create a CameraCaptureSession for camera preview.
             mCameraDevice.createCaptureSession(
-                    Arrays.asList(surface, mImageReader.getSurface()),
+                    Arrays.asList(surface, mPreviewReader.getSurface(), mImageReader.getSurface()),
                     new CameraCaptureSession.StateCallback() {
 
                         @Override
@@ -743,10 +791,15 @@ public class CameraFragment extends Fragment implements ImageSaver.ImageSaverLis
 
     private void takePicture() {
         try {
-            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
+            if (mTakePhotoRequestBuilder == null) {
+                mTakePhotoRequestBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+                mTakePhotoRequestBuilder.addTarget(mImageReader.getSurface());
+            }
+
+            mTakePhotoRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
                     CameraMetadata.CONTROL_AF_TRIGGER_START);
             mState = STATE_WAITING_LOCK;
-            mCaptureSession.capture(mPreviewRequestBuilder.build(), mCaptureCallback, mBackgroundHandler);
+            mCaptureSession.capture(mTakePhotoRequestBuilder.build(), mCaptureCallback, mBackgroundHandler);
         }
         catch (CameraAccessException e) {
             e.printStackTrace();
@@ -868,35 +921,119 @@ public class CameraFragment extends Fragment implements ImageSaver.ImageSaverLis
         return image;
     }
 
+    private void fillBytes(final Image.Plane[] planes, final byte[][] yuvBytes) {
+        // Because of the variable row stride it's not possible to know in
+        // advance the actual necessary dimensions of the yuv planes.
+        for (int i = 0; i < planes.length; ++i) {
+            final ByteBuffer buffer = planes[i].getBuffer();
+            if (yuvBytes[i] == null) {
+                yuvBytes[i] = new byte[buffer.capacity()];
+            }
+            buffer.get(yuvBytes[i]);
+        }
+    }
+
     /** Classifies a frame from the preview stream. */
-    private void classifyFrame() {
+    private void classifyFrame(ImageReader reader) {
         if (mClassifier == null || getActivity() == null || mCameraDevice == null) {
             showToast("");
             return;
         }
 
-        Matrix matrix = new Matrix();
-        matrix.postRotate(mSensorOrientation);
-
-        Bitmap bitmap =
-                mTextureView.getBitmap(ImageClassifier.DIM_IMG_SIZE_X, ImageClassifier.DIM_IMG_SIZE_Y);
-        Bitmap rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0,
-                ImageClassifier.DIM_IMG_SIZE_X, ImageClassifier.DIM_IMG_SIZE_Y, matrix, true);
-        List<Pair<String, Float>> predictions = mClassifier.getPredictions(rotatedBitmap);
-
-        bitmap.recycle();
-        rotatedBitmap.recycle();
-
-        Pair<String, Float> topPrediction = predictions.get(0);
-        mTopPrediction = topPrediction;
-
-        if (predictions.get(0).getSecond() < 0.30) {
-            showToast(getString(R.string.no_dogs_here));
-        } else {
-            showToast(topPrediction.getFirst());
+        if (rgbBytes == null) {
+            rgbBytes = new int[mPreviewSize.getWidth() * mPreviewSize.getHeight()];
         }
 
-        updateAdapterAsync(predictions);
+        try {
+            final Image image = reader.acquireLatestImage();
+            if (image == null) {
+                return;
+            }
+
+            if (isProcessingFrame) {
+                image.close();
+                return;
+            }
+
+            isProcessingFrame = true;
+            final Image.Plane[] planes = image.getPlanes();
+            fillBytes(planes, yuvBytes);
+            yRowStride = planes[0].getRowStride();
+            final int uvRowStride = planes[1].getRowStride();
+            final int uvPixelStride = planes[1].getPixelStride();
+
+            imageConverter = new Runnable() {
+                @Override
+                public void run() {
+                    ImageUtils.convertYUV420ToARGB8888(
+                            yuvBytes[0],
+                            yuvBytes[1],
+                            yuvBytes[2],
+                            mPreviewSize.getWidth(),
+                            mPreviewSize.getHeight(),
+                            yRowStride,
+                            uvRowStride,
+                            uvPixelStride,
+                            rgbBytes);
+                }
+            };
+
+            postInferenceCallback = new Runnable() {
+                @Override
+                public void run() {
+                    image.close();
+                    isProcessingFrame = false;
+                }
+            };
+
+            processImage();
+        } catch (final Exception e) {
+            Log.d("Camera", "Error processing image");
+            return;
+        }
+    }
+
+    private int[] getRgbBytes() {
+        imageConverter.run();
+        return rgbBytes;
+    }
+
+    private void processImage() {
+        rgbFrameBitmap.setPixels(getRgbBytes(), 0, mPreviewSize.getWidth(), 0, 0,
+                mPreviewSize.getWidth(), mPreviewSize.getHeight());
+        final Canvas canvas = new Canvas(croppedBitmap);
+        canvas.drawBitmap(rgbFrameBitmap, frameToCropTransform, null);
+
+        mBackgroundHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                List<Pair<String, Float>> predictions = mClassifier.getPredictions(croppedBitmap);
+
+                Pair<String, Float> topPrediction = predictions.get(0);
+                mTopPrediction = topPrediction;
+
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (predictions.get(0).getSecond() < 0.30) {
+                            showToast(getString(R.string.no_dogs_here));
+                        } else {
+                            showToast(topPrediction.getFirst());
+                        }
+
+                        updateAdapterAsync(predictions);
+                    }
+                });
+
+                readyForNextImage();
+            }
+        });
+    }
+
+    private void readyForNextImage() {
+        if (postInferenceCallback != null) {
+            postInferenceCallback.run();
+        }
     }
 
     @Override

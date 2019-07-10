@@ -90,10 +90,5 @@ class MainActivity : AppCompatActivity(), FragmentSwitchListener {
 
         private const val SIGNIN_REQUEST_CODE = 2
         const val ORIENTATION_PREFERENCE = "orientation_pref"
-
-        // Used to load the 'native-lib' library on application startup.
-        init {
-            System.loadLibrary("native-lib")
-        }
     }
 }

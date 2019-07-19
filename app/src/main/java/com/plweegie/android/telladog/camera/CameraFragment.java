@@ -147,6 +147,7 @@ public class CameraFragment extends Fragment implements ImageSaver.ImageSaverLis
     PredictionRepository mRepository;
 
     private boolean isProcessingFrame = false;
+    private boolean isCaptureInProgress = false;
     private byte[][] yuvBytes = new byte[3][];
     private int[] rgbBytes = null;
     private int yRowStride;
@@ -158,7 +159,6 @@ public class CameraFragment extends Fragment implements ImageSaver.ImageSaverLis
     private Matrix cropToFrameTransform;
 
     private final Object mLock = new Object();
-    private boolean mRunClassifier = false;
     private boolean mCheckedPermissions = false;
     private TextView mTextView;
     private ImageClassifier mClassifier;
@@ -238,22 +238,27 @@ public class CameraFragment extends Fragment implements ImageSaver.ImageSaverLis
                 public void onImageAvailable(ImageReader imageReader) {
                     mOutputFile = createImageFile();
 
-                    if (mImageUrl != null && mOutputFile != null) {
-                        DogPrediction predictionToSave = new DogPrediction(
-                                mTopPrediction.getFirst(),
-                                mTopPrediction.getSecond(),
-                                mImageUrl,
-                                new Date().getTime()
-                        );
+                    if (!isCaptureInProgress) {
+                        if (mImageUrl != null && mOutputFile != null) {
 
-                        mRepository.add(predictionToSave);
+                            DogPrediction predictionToSave = new DogPrediction(
+                                    mTopPrediction.getFirst(),
+                                    mTopPrediction.getSecond(),
+                                    mImageUrl,
+                                    new Date().getTime()
+                            );
+                            isCaptureInProgress = true;
 
-                        ImageSaver imageSaver = new ImageSaver(mOutputFile, imageReader.acquireNextImage());
-                        imageSaver.setListener(CameraFragment.this);
-                        mBackgroundHandler.post(imageSaver);
-                    } else {
-                        Toast.makeText(getActivity(), "Failed to save image", Toast.LENGTH_SHORT)
-                            .show();
+                            mRepository.add(predictionToSave);
+
+                            ImageSaver imageSaver = new ImageSaver(mOutputFile, imageReader.acquireNextImage());
+                            imageSaver.setListener(CameraFragment.this);
+                            mBackgroundHandler.post(imageSaver);
+                        } else {
+
+                            Toast.makeText(getActivity(), "Failed to save image", Toast.LENGTH_SHORT)
+                                    .show();
+                        }
                     }
                 }
             };
@@ -647,10 +652,6 @@ public class CameraFragment extends Fragment implements ImageSaver.ImageSaverLis
         mBackgroundThread = new HandlerThread(HANDLE_THREAD_NAME);
         mBackgroundThread.start();
         mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
-        synchronized (mLock) {
-            mRunClassifier = true;
-        }
-        mBackgroundHandler.post(periodicClassify);
     }
 
     /** Stops the background thread and its {@link Handler}. */
@@ -660,31 +661,10 @@ public class CameraFragment extends Fragment implements ImageSaver.ImageSaverLis
             mBackgroundThread.join();
             mBackgroundThread = null;
             mBackgroundHandler = null;
-            synchronized (mLock) {
-                mRunClassifier = false;
-            }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
-
-    /** Takes photos and classify them periodically. */
-    private Runnable periodicClassify =
-            new Runnable() {
-                @Override
-                public void run() {
-                    synchronized (mLock) {
-                        if (mRunClassifier) {
-                            //classifyFrame();
-                        }
-                    }
-
-                    if (mBackgroundHandler != null) {
-                        mBackgroundHandler.postDelayed(periodicClassify, 1000);
-                    }
-
-                }
-            };
 
     /** Creates a new {@link CameraCaptureSession} for camera preview. */
     private void createCameraPreviewSession() {
@@ -1042,5 +1022,6 @@ public class CameraFragment extends Fragment implements ImageSaver.ImageSaverLis
             mIndicator.setVisibility(View.GONE);
             mFragmentSwitchListener.onDogListFragmentSelect();
         });
+        isProcessingFrame = false;
     }
 }

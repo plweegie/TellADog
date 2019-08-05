@@ -71,13 +71,15 @@ class ThumbnailLoader {
             val rotatedBitmap = bitmap?.let {
                 Bitmap.createBitmap(it, 0, 0, it.width, it.height, matrix, true)
             }
-            bitmap?.recycle()
 
             val scaledBitmap = rotatedBitmap?.let {
                 Bitmap.createScaledBitmap(it, reqWidth, reqHeight, false)
             }
-            rotatedBitmap?.recycle()
-            return scaledBitmap
+
+            return scaledBitmap.also {
+                rotatedBitmap?.recycle()
+                bitmap?.recycle()
+            }
         }
     }
 }

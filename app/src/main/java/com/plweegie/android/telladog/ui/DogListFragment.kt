@@ -39,9 +39,7 @@ import com.plweegie.android.telladog.utils.ThumbnailLoader
 import com.plweegie.android.telladog.viewmodels.PredictionListViewModel
 import com.plweegie.android.telladog.viewmodels.PredictionListViewModelFactory
 import kotlinx.android.synthetic.main.fragment_dog_list.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import java.util.*
 import javax.inject.Inject
 
@@ -55,9 +53,12 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
     lateinit var classifier: ImageClassifier
 
     private lateinit var viewModel: PredictionListViewModel
-    private lateinit var adapter: PhotoGridAdapter
+    private lateinit var gridAdapter: PhotoGridAdapter
     private lateinit var fragmentSwitchListener: FragmentSwitchListener
     private var orientation: Int = 0
+
+    private val loadBitmapJob = Job()
+    private val fragmentScope = CoroutineScope(Dispatchers.Main + loadBitmapJob)
 
     private var currentPrediction: DogPrediction? = null
     private var userId: String? = null
@@ -80,7 +81,7 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
         orientation = PreferenceManager.getDefaultSharedPreferences(activity)
                 .getInt(MainActivity.ORIENTATION_PREFERENCE, 0)
 
-        adapter = PhotoGridAdapter(orientation).apply {
+        gridAdapter = PhotoGridAdapter(orientation, activity!!).apply {
             setHasStableIds(true)
             onItemClickListener = this@DogListFragment
         }
@@ -97,14 +98,14 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
         predictions_list.apply {
             this.layoutManager = layoutManager
             setHasFixedSize(true)
-            adapter = adapter
+            adapter = gridAdapter
         }
 
         viewModel.getPredictionList().observe(viewLifecycleOwner, Observer {
 
             it?.run {
                 onboarding_tv.visibility = View.GONE
-                adapter.setContent(this)
+                gridAdapter.setContent(this)
 
                 if (this.isEmpty()) {
                     onboarding_tv.visibility = View.VISIBLE
@@ -117,6 +118,7 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
 
     override fun onDestroy() {
         super.onDestroy()
+        fragmentScope.cancel()
         classifier.close()
     }
 
@@ -124,7 +126,7 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == READ_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
             data?.data?.also { uri ->
-                runBlocking {
+                fragmentScope.launch {
                     loadImage(uri)
                 }
             }

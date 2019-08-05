@@ -1,5 +1,7 @@
 package com.plweegie.android.telladog.adapters
 
+import android.content.Context
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,7 +16,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 
-class PhotoGridAdapter(private val orientation: Int) : RecyclerView.Adapter<PhotoGridAdapter.PhotoGridHolder>() {
+class PhotoGridAdapter(private val orientation: Int,
+                       private val context: Context) : RecyclerView.Adapter<PhotoGridAdapter.PhotoGridHolder>() {
 
     interface PhotoGridListener {
         fun onDeleteClicked(prediction: DogPrediction?)
@@ -70,10 +73,15 @@ class PhotoGridAdapter(private val orientation: Int) : RecyclerView.Adapter<Phot
 
             GlobalScope.launch(Dispatchers.Main) {
                 val bitmap = withContext(Dispatchers.Default) {
-                    ThumbnailLoader.decodeBitmapFromFile(prediction?.imageUri,
-                            100, 100, orientation)
-                }
 
+                    if (prediction?.imageUri!!.startsWith("content")) {
+                        ThumbnailLoader.decodeBitmapFromUri(context.contentResolver,
+                                Uri.parse(prediction.imageUri), 100, 100, orientation)
+                    } else {
+                        ThumbnailLoader.decodeBitmapFromFile(prediction.imageUri,
+                                100, 100, orientation)
+                    }
+                }
                 itemView.thumbnail_imageview.setImageBitmap(bitmap)
             }
         }

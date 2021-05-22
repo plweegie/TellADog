@@ -22,18 +22,17 @@ import android.preference.PreferenceManager
 import android.view.*
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.GridLayoutManager
 import com.plweegie.android.telladog.MainActivity
 import com.plweegie.android.telladog.MyApp
 import com.plweegie.android.telladog.R
 import com.plweegie.android.telladog.adapters.PhotoGridAdapter
 import com.plweegie.android.telladog.data.DogPrediction
+import com.plweegie.android.telladog.databinding.FragmentDogListBinding
 import com.plweegie.android.telladog.viewmodels.PredictionListViewModel
 import com.plweegie.android.telladog.viewmodels.PredictionListViewModelFactory
-import kotlinx.android.synthetic.main.fragment_dog_list.*
 import javax.inject.Inject
 
 
@@ -42,14 +41,16 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
     @Inject
     lateinit var mViewModelFactory: PredictionListViewModelFactory
 
-    private lateinit var mViewModel: PredictionListViewModel
+    private val mViewModel: PredictionListViewModel by viewModels { mViewModelFactory }
+
     private lateinit var mAdapter: PhotoGridAdapter
     private lateinit var mFragmentSwitchListener: FragmentSwitchListener
+    private lateinit var binding: FragmentDogListBinding
 
     private var currentPrediction: DogPrediction? = null
     private var userId: String? = null
 
-    override fun onAttach(context: Context?) {
+    override fun onAttach(context: Context) {
         (activity?.application as MyApp).mAppComponent.inject(this)
         super.onAttach(context)
     }
@@ -57,9 +58,6 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
-
-        mViewModel = ViewModelProviders.of(activity as FragmentActivity, mViewModelFactory)
-                .get(PredictionListViewModel::class.java)
 
         mFragmentSwitchListener = activity as MainActivity
 
@@ -74,13 +72,15 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
         userId = arguments?.getString(USER_ID_ARG)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
-            inflater.inflate(R.layout.fragment_dog_list, container, false)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        binding = FragmentDogListBinding.inflate(inflater, container, false)
+        return binding.root
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val layoutManager = GridLayoutManager(activity, 1)
 
-        predictions_list.apply {
+        binding.predictionsList.apply {
             this.layoutManager = layoutManager
             setHasFixedSize(true)
             adapter = mAdapter
@@ -89,11 +89,11 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
         mViewModel.getPredictionList().observe(viewLifecycleOwner, Observer {
 
             it?.run {
-                onboarding_tv.visibility = View.GONE
+                binding.onboardingTv.visibility = View.GONE
                 mAdapter.setContent(this)
 
                 if (this.isEmpty()) {
-                    onboarding_tv.visibility = View.VISIBLE
+                    binding.onboardingTv.visibility = View.VISIBLE
                 }
             }
         })
@@ -101,13 +101,13 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
         setHasOptionsMenu(true)
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
-        inflater?.inflate(R.menu.fragment_dog_list, menu)
+        inflater.inflate(R.menu.fragment_dog_list, menu)
     }
 
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        return when (item?.itemId) {
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
             R.id.change_to_camera -> {
                 mFragmentSwitchListener.onCameraFragmentSelect()
                 true
@@ -131,7 +131,8 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
                 val firebaseDialog = FirebaseDialog().apply {
                     listener = this@DogListFragment
                 }
-                firebaseDialog.show(fragmentManager, "FirebaseDialog")
+
+                firebaseDialog.show(parentFragmentManager, "FirebaseDialog")
             }
          }
     }

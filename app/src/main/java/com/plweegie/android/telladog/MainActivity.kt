@@ -12,16 +12,19 @@ import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.plweegie.android.telladog.camera.CameraFragment
+import com.plweegie.android.telladog.databinding.ActivityMainBinding
 import com.plweegie.android.telladog.ui.DogListFragment
 import com.plweegie.android.telladog.ui.FragmentSwitchListener
-import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity(), FragmentSwitchListener {
+
+    private lateinit var binding: ActivityMainBinding
 
     private var currentUser: FirebaseUser? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        binding = ActivityMainBinding.inflate(layoutInflater)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             window.apply {
@@ -30,8 +33,8 @@ class MainActivity : AppCompatActivity(), FragmentSwitchListener {
             }
         }
 
-        setContentView(R.layout.activity_main)
-        setSupportActionBar(main_toolbar)
+        setContentView(binding.root)
+        setSupportActionBar(binding.mainToolbar)
 
         currentUser = FirebaseAuth.getInstance().currentUser
         if (currentUser == null) {
@@ -87,7 +90,6 @@ class MainActivity : AppCompatActivity(), FragmentSwitchListener {
     }
 
     companion object {
-
         private const val SIGNIN_REQUEST_CODE = 2
         const val ORIENTATION_PREFERENCE = "orientation_pref"
     }

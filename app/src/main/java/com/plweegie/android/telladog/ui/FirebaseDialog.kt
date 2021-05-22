@@ -7,11 +7,13 @@ import android.view.LayoutInflater
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.DialogFragment
 import com.plweegie.android.telladog.R
-import kotlinx.android.synthetic.main.dialog_firebase.view.*
+import com.plweegie.android.telladog.databinding.DialogFirebaseBinding
 
 class FirebaseDialog : DialogFragment() {
 
     internal lateinit var listener: FirebaseDialogListener
+
+    private lateinit var binding: DialogFirebaseBinding
 
     interface FirebaseDialogListener {
         fun onPositiveClick(dialog: DialogFragment, isPermanent: Boolean)
@@ -20,18 +22,18 @@ class FirebaseDialog : DialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return activity?.let {
-            val builder = AlertDialog.Builder(it)
-            val dialog = LayoutInflater.from(context).inflate(R.layout.dialog_firebase, null).apply {
-                firebase_dialog_check.typeface = ResourcesCompat.getFont(it, R.font.open_sans)
+            binding = DialogFirebaseBinding.inflate(LayoutInflater.from(context)).apply {
+                firebaseDialogCheck.typeface = ResourcesCompat.getFont(it, R.font.open_sans)
             }
+            val builder = AlertDialog.Builder(it)
 
-            builder.setView(dialog)
+            builder.setView(binding.root)
                     .setPositiveButton(R.string.dialog_yes) { _, _ ->
-                        listener.onPositiveClick(this, dialog.firebase_dialog_check.isChecked)
+                        listener.onPositiveClick(this, binding.firebaseDialogCheck.isChecked)
                     }
                     .setNegativeButton(R.string.dialog_no) { _, _ ->
-                        if (dialog.firebase_dialog_check.isChecked) {
-                            listener.onNegativeClick(this, dialog.firebase_dialog_check.isChecked)
+                        if (binding.firebaseDialogCheck.isChecked) {
+                            listener.onNegativeClick(this, binding.firebaseDialogCheck.isChecked)
                         }
                     }
             builder.create()

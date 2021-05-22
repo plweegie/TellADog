@@ -6,8 +6,8 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.plweegie.android.telladog.R
 import com.plweegie.android.telladog.data.DogPrediction
+import com.plweegie.android.telladog.databinding.GridItemBinding
 import com.plweegie.android.telladog.utils.ThumbnailLoader
-import kotlinx.android.synthetic.main.grid_item.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -26,7 +26,8 @@ class PhotoGridAdapter(private val orientation: Int) : RecyclerView.Adapter<Phot
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PhotoGridHolder {
         val inflater = LayoutInflater.from(parent.context)
-        return PhotoGridHolder(inflater, parent, R.layout.grid_item)
+        val itemBinding = GridItemBinding.inflate(inflater, parent, false)
+        return PhotoGridHolder(itemBinding)
     }
 
     override fun onBindViewHolder(holder: PhotoGridHolder, position: Int) {
@@ -42,29 +43,29 @@ class PhotoGridAdapter(private val orientation: Int) : RecyclerView.Adapter<Phot
         notifyDataSetChanged()
     }
 
-    inner class PhotoGridHolder(inflater: LayoutInflater, parent: ViewGroup, layoutResId: Int) :
-            RecyclerView.ViewHolder(inflater.inflate(layoutResId, parent, false)) {
+    inner class PhotoGridHolder(private val itemBinding: GridItemBinding) :
+            RecyclerView.ViewHolder(itemBinding.root) {
 
         fun bind(prediction: DogPrediction?) {
-            itemView.apply {
-                breed_grid_tv.text = prediction?.prediction
-                confidence_grid_tv.text =
+            itemBinding.apply {
+                breedGridTv.text = prediction?.prediction
+                confidenceGridTv.text =
                         "%.1f %%".format(100.0 * (prediction?.accuracy as Float))
 
-                delete_iv.setOnClickListener {
+                deleteIv.setOnClickListener {
                     onItemClickListener.onDeleteClicked(prediction)
                 }
-                sync_iv.setOnClickListener {
+                syncIv.setOnClickListener {
                     if (prediction.syncState == DogPrediction.SyncState.NOT_SYNCED.value) {
                         onItemClickListener.onSyncClicked(prediction)
                     }
                 }
-                sync_iv.setImageResource(
+                syncIv.setImageResource(
                         if (prediction.syncState == DogPrediction.SyncState.SYNCED.value) R.drawable.ic_cloud_done_24dp
                         else R.drawable.ic_cloud_upload_blue_24dp
                 )
 
-                syncing_progress.visibility =
+                syncingProgress.visibility =
                         if (prediction.syncState == DogPrediction.SyncState.SYNCING.value) View.VISIBLE else View.GONE
             }
 
@@ -74,7 +75,7 @@ class PhotoGridAdapter(private val orientation: Int) : RecyclerView.Adapter<Phot
                             100, 100, orientation)
                 }
 
-                itemView.thumbnail_imageview.setImageBitmap(bitmap)
+                itemBinding.thumbnailImageview.setImageBitmap(bitmap)
             }
         }
     }

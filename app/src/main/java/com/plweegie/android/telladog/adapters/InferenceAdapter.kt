@@ -13,15 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-
 package com.plweegie.android.telladog.adapters
 
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.plweegie.android.telladog.R
-import kotlinx.android.synthetic.main.inference_list_item.view.*
+import com.plweegie.android.telladog.databinding.InferenceListItemBinding
 
 
 class InferenceAdapter(private val context: Context) : RecyclerView.Adapter<InferenceAdapter.InferenceHolder>() {
@@ -30,7 +28,8 @@ class InferenceAdapter(private val context: Context) : RecyclerView.Adapter<Infe
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): InferenceHolder {
         val inflater = LayoutInflater.from(context)
-        return InferenceHolder(inflater, parent, R.layout.inference_list_item)
+        val itemBinding = InferenceListItemBinding.inflate(inflater, parent, false)
+        return InferenceHolder(itemBinding)
     }
 
     override fun onBindViewHolder(holder: InferenceHolder, position: Int) {
@@ -44,12 +43,12 @@ class InferenceAdapter(private val context: Context) : RecyclerView.Adapter<Infe
         notifyDataSetChanged()
     }
 
-    class InferenceHolder(inflater: LayoutInflater, parent: ViewGroup?, layoutResId: Int)
-        : RecyclerView.ViewHolder(inflater.inflate(layoutResId, parent, false)) {
+    class InferenceHolder(private val itemBinding: InferenceListItemBinding)
+        : RecyclerView.ViewHolder(itemBinding.root) {
 
         fun bind(prediction: Pair<String, Float>) {
-            itemView.breed_tv.text = prediction.first
-            itemView.confidence_tv.text = "%.1f %%".format(100.0 * prediction.second)
+            itemBinding.breedTv.text = prediction.first
+            itemBinding.confidenceTv.text = "%.1f %%".format(100.0 * prediction.second)
         }
     }
 }

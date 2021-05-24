@@ -1,56 +1,56 @@
 package com.plweegie.android.telladog.di
 
-import com.google.firebase.ml.common.modeldownload.FirebaseLocalModel
-import com.google.firebase.ml.common.modeldownload.FirebaseModelDownloadConditions
-import com.google.firebase.ml.common.modeldownload.FirebaseRemoteModel
-import com.google.firebase.ml.custom.FirebaseModelDataType
-import com.google.firebase.ml.custom.FirebaseModelInputOutputOptions
-import com.google.firebase.ml.custom.FirebaseModelOptions
+import com.google.mlkit.common.model.CustomRemoteModel
+import com.google.mlkit.common.model.DownloadConditions
+import com.google.mlkit.common.model.RemoteModelSource
+import com.google.mlkit.linkfirebase.FirebaseModelSource
+import com.google.mlkit.vision.label.custom.CustomImageLabelerOptions
+import com.plweegie.android.telladog.data.PredictionRepository
+import com.plweegie.android.telladog.viewmodels.ModelDownloadViewModelFactory
+import com.plweegie.android.telladog.viewmodels.PredictionListViewModelFactory
 import dagger.Module
 import dagger.Provides
+import javax.inject.Provider
 import javax.inject.Singleton
 
 @Module
-class MachineLearningModule(private val mCloudModelName: String, private val mLocalModelName: String) {
+class MachineLearningModule(
+    private val cloudModelName: String,
+    private val maxNumberOfResults: Int,
+    private val confidenceThreshold: Float
+) {
 
     @Provides
     @Singleton
-    fun provideMLConditions(): FirebaseModelDownloadConditions {
-        val conditionsBuilder = FirebaseModelDownloadConditions.Builder().requireWifi()
+    fun provideMLConditions(): DownloadConditions {
+        val conditionsBuilder = DownloadConditions.Builder().requireWifi()
         return conditionsBuilder.build()
     }
 
     @Provides
     @Singleton
-    fun provideMLCloudSource(conditions: FirebaseModelDownloadConditions): FirebaseRemoteModel =
-            FirebaseRemoteModel.Builder(mCloudModelName)
-                    .enableModelUpdates(true)
-                    .setInitialDownloadConditions(conditions)
-                    .setUpdatesDownloadConditions(conditions)
+    fun provideMLCloudSource(): RemoteModelSource =
+            FirebaseModelSource.Builder(cloudModelName)
                     .build()
 
     @Provides
     @Singleton
-    fun provideMLLocalSource(): FirebaseLocalModel =
-            FirebaseLocalModel.Builder("{$mCloudModelName}_local")
-                    .setAssetFilePath(mLocalModelName)
-                    .build()
+    fun provideCustomRemoteModel(remoteModelSource: RemoteModelSource): CustomRemoteModel =
+            CustomRemoteModel.Builder(remoteModelSource)
+                .build()
 
     @Provides
     @Singleton
-    fun provideMLOptions(): FirebaseModelOptions =
-            FirebaseModelOptions.Builder()
-                    .setRemoteModelName(mCloudModelName)
-                    .setLocalModelName("{$mCloudModelName}_local")
-                    .build()
+    fun provideImageLabelerOptions(customRemoteModel: CustomRemoteModel): CustomImageLabelerOptions =
+            CustomImageLabelerOptions.Builder(customRemoteModel)
+                .setMaxResultCount(maxNumberOfResults)
+                .setConfidenceThreshold(confidenceThreshold)
+                .build()
 
     @Provides
     @Singleton
-    fun provideMLInOutOptions(): FirebaseModelInputOutputOptions =
-            FirebaseModelInputOutputOptions.Builder()
-                    .setInputFormat(0, FirebaseModelDataType.FLOAT32, intArrayOf(1, 224, 224, 3))
-                    .setOutputFormat(0, FirebaseModelDataType.FLOAT32, intArrayOf(1, 120))
-                    .build()
-
-
+    fun provideModelDownloadViewModelFactory(
+        downloadConditions: Provider<DownloadConditions>,
+        customRemoteModel: Provider<CustomRemoteModel>
+    ) = ModelDownloadViewModelFactory(downloadConditions, customRemoteModel)
 }

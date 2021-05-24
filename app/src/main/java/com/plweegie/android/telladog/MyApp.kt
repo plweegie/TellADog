@@ -16,7 +16,11 @@ class MyApp : Application() {
 
     val machineLearningComponent: MachineLearningComponent by lazy {
         DaggerMachineLearningComponent.builder()
-                .machineLearningModule(MachineLearningModule(CLOUD_MODEL_NAME, LOCAL_MODEL_NAME))
+                .machineLearningModule(MachineLearningModule(
+                    CLOUD_MODEL_NAME,
+                    MAX_NUMBER_OF_RESULTS,
+                    CONFIDENCE_THRESHOLD
+                ))
                 .build()
     }
 
@@ -24,9 +28,10 @@ class MyApp : Application() {
         super.onCreate()
     }
 
-    companion object {
+    private companion object {
         const val DATABASE_NAME = "predictions"
-        const val LOCAL_MODEL_NAME = "dog_optimized_graph.tflite"
         const val CLOUD_MODEL_NAME = "dbr_recognizer"
+        const val MAX_NUMBER_OF_RESULTS = 3
+        const val CONFIDENCE_THRESHOLD = 0.3f
     }
 }

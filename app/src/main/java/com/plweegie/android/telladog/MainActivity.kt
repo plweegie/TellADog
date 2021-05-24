@@ -5,8 +5,11 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
@@ -15,6 +18,13 @@ import com.plweegie.android.telladog.camera.CameraFragment
 import com.plweegie.android.telladog.databinding.ActivityMainBinding
 import com.plweegie.android.telladog.ui.DogListFragment
 import com.plweegie.android.telladog.ui.FragmentSwitchListener
+import com.plweegie.android.telladog.viewmodels.ModelDownloadViewModel
+import com.plweegie.android.telladog.viewmodels.ModelDownloadViewModelFactory
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
 class MainActivity : AppCompatActivity(), FragmentSwitchListener {
 
@@ -22,8 +32,15 @@ class MainActivity : AppCompatActivity(), FragmentSwitchListener {
 
     private var currentUser: FirebaseUser? = null
 
+    @Inject
+    lateinit var viewModelFactory: ModelDownloadViewModelFactory
+
+    private val viewModel: ModelDownloadViewModel by viewModels { viewModelFactory }
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        (application as MyApp).machineLearningComponent.inject(this)
         super.onCreate(savedInstanceState)
+
         binding = ActivityMainBinding.inflate(layoutInflater)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -49,6 +66,20 @@ class MainActivity : AppCompatActivity(), FragmentSwitchListener {
                     .replace(R.id.container, fragment)
                     .commit()
         }
+
+        lifecycleScope.launchWhenStarted {
+            viewModel.modelDownloadState.collect {
+                when (it) {
+                    ModelDownloadViewModel.DownloadState.IN_PROGRESS -> {
+                        showModelDownloadProgress()
+                    }
+                    ModelDownloadViewModel.DownloadState.COMPLETE -> {
+                        showCamera()
+                    }
+                    ModelDownloadViewModel.DownloadState.IDLE -> {}
+                }
+            }
+        }
     }
 
     override fun onDogListFragmentSelect() {
@@ -60,11 +91,15 @@ class MainActivity : AppCompatActivity(), FragmentSwitchListener {
     }
 
     override fun onCameraFragmentSelect() {
-        val cameraFragment = CameraFragment.newInstance()
-        supportFragmentManager.beginTransaction()
-                .setCustomAnimations(R.anim.camera_slide_in, R.anim.camera_slide_out)
-                .replace(R.id.container, cameraFragment)
-                .commit()
+        lifecycleScope.launch(Dispatchers.IO) {
+            if (viewModel.isRemoteClassifierModelDownloadedAsync().await()) {
+                withContext(Dispatchers.Main) {
+                    showCamera()
+                }
+            } else {
+                viewModel.downloadRemoteClassifierModel()
+            }
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -76,6 +111,18 @@ class MainActivity : AppCompatActivity(), FragmentSwitchListener {
                 currentUser = FirebaseAuth.getInstance().currentUser
             }
         }
+    }
+
+    private fun showCamera() {
+        val cameraFragment = CameraFragment.newInstance()
+        supportFragmentManager.beginTransaction()
+            .setCustomAnimations(R.anim.camera_slide_in, R.anim.camera_slide_out)
+            .replace(R.id.container, cameraFragment)
+            .commit()
+    }
+
+    private fun showModelDownloadProgress() {
+        Toast.makeText(this, R.string.wait_download, Toast.LENGTH_LONG).show()
     }
 
     private fun startAuth() {

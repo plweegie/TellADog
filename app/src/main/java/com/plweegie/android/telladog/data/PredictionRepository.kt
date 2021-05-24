@@ -8,6 +8,7 @@ import androidx.lifecycle.LiveData
 import com.google.firebase.database.*
 import com.google.firebase.storage.StorageReference
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
@@ -18,7 +19,6 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 
 @Singleton
 class PredictionRepository @Inject constructor(private val mDatabase: PredictionDb,
@@ -59,7 +59,7 @@ class PredictionRepository @Inject constructor(private val mDatabase: Prediction
     }
 
     private suspend fun Query.await(): DataSnapshot {
-        return suspendCoroutine { continuation ->
+        return suspendCancellableCoroutine { continuation ->
             addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     continuation.resume(snapshot)

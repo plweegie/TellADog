@@ -239,7 +239,7 @@ public class CameraFragment extends Fragment implements ImageSaver.ImageSaverLis
                     mOutputFile = createImageFile();
 
                     if (!isCaptureInProgress) {
-                        if (mImageUrl != null && mOutputFile != null) {
+                        if (mImageUrl != null && mOutputFile != null && mTopPrediction != null) {
 
                             DogPrediction predictionToSave = new DogPrediction(
                                     mTopPrediction.getFirst(),
@@ -406,11 +406,8 @@ public class CameraFragment extends Fragment implements ImageSaver.ImageSaverLis
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        try {
-            mClassifier = new ImageClassifier(getActivity());
-        } catch (IOException e) {
-            Log.e(TAG, "Failed to initialize an image classifier.");
-        }
+        mClassifier = new ImageClassifier(getActivity());
+
         startBackgroundThread();
     }
 
@@ -915,7 +912,12 @@ public class CameraFragment extends Fragment implements ImageSaver.ImageSaverLis
 
     /** Classifies a frame from the preview stream. */
     private void classifyFrame(ImageReader reader) {
-        if (mClassifier == null || getActivity() == null || mCameraDevice == null) {
+        if (mClassifier == null) {
+            showToast(getString(R.string.wait_download));
+            return;
+        }
+
+        if (getActivity() == null || mCameraDevice == null) {
             showToast("");
             return;
         }
@@ -989,20 +991,19 @@ public class CameraFragment extends Fragment implements ImageSaver.ImageSaverLis
             public void run() {
                 List<Pair<String, Float>> predictions = mClassifier.getPredictions(croppedBitmap);
 
-                Pair<String, Float> topPrediction = predictions.get(0);
-                mTopPrediction = topPrediction;
+                if (predictions == null) {
+                    return;
+                }
 
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (predictions.get(0).getSecond() < 0.30) {
-                            showToast(getString(R.string.no_dogs_here));
-                        } else {
-                            showToast(topPrediction.getFirst());
-                        }
-
-                        updateAdapterAsync(predictions);
+                getActivity().runOnUiThread(() -> {
+                    if (predictions.isEmpty()) {
+                        showToast(getString(R.string.no_dogs_here));
+                    } else {
+                        mTopPrediction = predictions.get(0);
+                        showToast(mTopPrediction.getFirst());
                     }
+
+                    updateAdapterAsync(predictions);
                 });
 
                 readyForNextImage();

@@ -8,6 +8,7 @@
     <string name="toggle_turn_off">NN:Off</string>
     <string name="toggle">Use NNAPI</string>
     <string name="no_dogs_here">Not seeing any dogs...</string>
+    <string name="wait_download">Downloading machine learning model, we\'ll take you to the camera as soon as we\'re done</string>
 
     <!-- Menus -->
     <string name="change_to_camera">Predict in live preview</string>

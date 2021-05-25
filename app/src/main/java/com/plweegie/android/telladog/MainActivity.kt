@@ -9,7 +9,9 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
@@ -67,16 +69,18 @@ class MainActivity : AppCompatActivity(), FragmentSwitchListener {
                     .commit()
         }
 
-        lifecycleScope.launchWhenStarted {
-            viewModel.modelDownloadState.collect {
-                when (it) {
-                    ModelDownloadViewModel.DownloadState.IN_PROGRESS -> {
-                        showModelDownloadProgress()
+        lifecycleScope.launch {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.modelDownloadState.collect {
+                    when (it) {
+                        ModelDownloadViewModel.DownloadState.IN_PROGRESS -> {
+                            showModelDownloadProgress()
+                        }
+                        ModelDownloadViewModel.DownloadState.COMPLETE -> {
+                            showCamera()
+                        }
+                        ModelDownloadViewModel.DownloadState.IDLE -> {}
                     }
-                    ModelDownloadViewModel.DownloadState.COMPLETE -> {
-                        showCamera()
-                    }
-                    ModelDownloadViewModel.DownloadState.IDLE -> {}
                 }
             }
         }

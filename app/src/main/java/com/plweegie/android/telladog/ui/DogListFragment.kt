@@ -18,12 +18,12 @@ package com.plweegie.android.telladog.ui
 
 import android.content.Context
 import android.os.Bundle
-import android.preference.PreferenceManager
 import android.view.*
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
+import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.GridLayoutManager
 import com.plweegie.android.telladog.MainActivity
 import com.plweegie.android.telladog.MyApp

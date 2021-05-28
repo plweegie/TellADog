@@ -1,11 +1,11 @@
 package com.plweegie.android.telladog
 
 import android.app.Activity
-import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -13,7 +13,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.firebase.ui.auth.AuthUI
-import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.plweegie.android.telladog.camera.CameraFragment
@@ -38,6 +37,14 @@ class MainActivity : AppCompatActivity(), FragmentSwitchListener {
     lateinit var viewModelFactory: ModelDownloadViewModelFactory
 
     private val viewModel: ModelDownloadViewModel by viewModels { viewModelFactory }
+
+    private val startForResult = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            currentUser = FirebaseAuth.getInstance().currentUser
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         (application as MyApp).machineLearningComponent.inject(this)
@@ -106,17 +113,6 @@ class MainActivity : AppCompatActivity(), FragmentSwitchListener {
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == SIGNIN_REQUEST_CODE) {
-            val response = IdpResponse.fromResultIntent(data)
-
-            if (resultCode == Activity.RESULT_OK) {
-                currentUser = FirebaseAuth.getInstance().currentUser
-            }
-        }
-    }
-
     private fun showCamera() {
         val cameraFragment = CameraFragment.newInstance()
         supportFragmentManager.beginTransaction()
@@ -131,12 +127,12 @@ class MainActivity : AppCompatActivity(), FragmentSwitchListener {
 
     private fun startAuth() {
         val providers = arrayListOf(AuthUI.IdpConfig.GoogleBuilder().build())
-        startActivityForResult(
-                AuthUI.getInstance()
-                        .createSignInIntentBuilder()
-                        .setAvailableProviders(providers)
-                        .build(),
-                SIGNIN_REQUEST_CODE
+
+        startForResult.launch(
+            AuthUI.getInstance()
+                .createSignInIntentBuilder()
+                .setAvailableProviders(providers)
+                .build()
         )
     }
 

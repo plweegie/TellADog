@@ -45,7 +45,6 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
@@ -65,6 +64,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -80,7 +80,6 @@ import com.plweegie.android.telladog.ui.FragmentSwitchListener;
 import com.plweegie.android.telladog.utils.ImageUtils;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;

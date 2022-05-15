@@ -15,14 +15,13 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.plweegie.android.telladog.camera.CameraFragment
+import com.plweegie.android.telladog.camera.CameraXFragment
 import com.plweegie.android.telladog.databinding.ActivityMainBinding
 import com.plweegie.android.telladog.ui.DogListFragment
 import com.plweegie.android.telladog.ui.FragmentSwitchListener
 import com.plweegie.android.telladog.viewmodels.ModelDownloadViewModel
 import com.plweegie.android.telladog.viewmodels.ModelDownloadViewModelFactory
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -114,7 +113,7 @@ class MainActivity : AppCompatActivity(), FragmentSwitchListener {
     }
 
     private fun showCamera() {
-        val cameraFragment = CameraFragment.newInstance()
+        val cameraFragment = CameraXFragment.newInstance()
         supportFragmentManager.beginTransaction()
             .setCustomAnimations(R.anim.camera_slide_in, R.anim.camera_slide_out)
             .replace(R.id.container, cameraFragment)

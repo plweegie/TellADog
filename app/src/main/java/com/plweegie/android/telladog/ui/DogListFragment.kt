@@ -61,7 +61,7 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
 
         mFragmentSwitchListener = activity as MainActivity
 
-        val orientation = PreferenceManager.getDefaultSharedPreferences(activity)
+        val orientation = PreferenceManager.getDefaultSharedPreferences(requireActivity())
                 .getInt(MainActivity.ORIENTATION_PREFERENCE, 0)
 
         mAdapter = PhotoGridAdapter(orientation).apply {
@@ -72,7 +72,7 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
         userId = arguments?.getString(USER_ID_ARG)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         binding = FragmentDogListBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -123,7 +123,7 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
     }
 
     override fun onSyncClicked(prediction: DogPrediction?) {
-        PreferenceManager.getDefaultSharedPreferences(activity).run {
+        PreferenceManager.getDefaultSharedPreferences(requireActivity()).run {
             if (contains(FIREBASE_SYNC_PREFERENCE)) {
                 mViewModel.syncToFirebase(prediction, userId!!, getBoolean(FIREBASE_SYNC_PREFERENCE, false))
             } else {
@@ -139,7 +139,7 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
 
     override fun onPositiveClick(dialog: DialogFragment, isPermanent: Boolean) {
         if (isPermanent) {
-            PreferenceManager.getDefaultSharedPreferences(activity).edit()
+            PreferenceManager.getDefaultSharedPreferences(requireActivity()).edit()
                     .putBoolean(FIREBASE_SYNC_PREFERENCE, true)
                     .apply()
         }
@@ -149,7 +149,7 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
 
     override fun onNegativeClick(dialog: DialogFragment, isPermanent: Boolean) {
         if (isPermanent) {
-            PreferenceManager.getDefaultSharedPreferences(activity).edit()
+            PreferenceManager.getDefaultSharedPreferences(requireActivity()).edit()
                     .putBoolean(FIREBASE_SYNC_PREFERENCE, false)
                     .apply()
         }

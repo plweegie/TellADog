@@ -9,6 +9,6 @@ import javax.inject.Provider
 class PredictionListViewModelFactory(private val mRepository: Provider<PredictionRepository>) :
         ViewModelProvider.NewInstanceFactory() {
 
-    override fun <T : ViewModel?> create(modelClass: Class<T>): T =
+    override fun <T : ViewModel> create(modelClass: Class<T>): T =
             PredictionListViewModel(mRepository.get()) as T
 }

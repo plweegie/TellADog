@@ -5,9 +5,7 @@ import com.google.mlkit.common.model.DownloadConditions
 import com.google.mlkit.common.model.RemoteModelSource
 import com.google.mlkit.linkfirebase.FirebaseModelSource
 import com.google.mlkit.vision.label.custom.CustomImageLabelerOptions
-import com.plweegie.android.telladog.data.PredictionRepository
 import com.plweegie.android.telladog.viewmodels.ModelDownloadViewModelFactory
-import com.plweegie.android.telladog.viewmodels.PredictionListViewModelFactory
 import dagger.Module
 import dagger.Provides
 import javax.inject.Provider

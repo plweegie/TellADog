@@ -4,12 +4,11 @@
     android:layout_height="match_parent"
     android:background="@android:color/black">
 
-    <com.plweegie.android.telladog.camera.AutoFitTextureView
-        android:id="@+id/texture"
+    <androidx.camera.view.PreviewView
+        android:id="@+id/camera_preview"
         android:layout_width="match_parent"
-        android:layout_gravity="center_horizontal"
         android:layout_height="match_parent" />
-    
+
     <ProgressBar
         android:id="@+id/saving_progress_bar"
         android:layout_width="wrap_content"

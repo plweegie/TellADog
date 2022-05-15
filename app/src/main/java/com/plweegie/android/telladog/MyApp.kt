@@ -32,6 +32,6 @@ class MyApp : Application() {
         const val DATABASE_NAME = "predictions"
         const val CLOUD_MODEL_NAME = "dbr_recognizer"
         const val MAX_NUMBER_OF_RESULTS = 3
-        const val CONFIDENCE_THRESHOLD = 0.3f
+        const val CONFIDENCE_THRESHOLD = 0.25f
     }
 }

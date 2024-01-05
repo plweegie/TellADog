@@ -85,14 +85,15 @@ class PredictionRepository @Inject constructor(private val mDatabase: Prediction
     private fun sendToStorage(prediction: DogPrediction?, userId: String) {
 
         prediction?.run {
-            val file = Uri.fromFile(File(imageUri))
-            val dogImagesReference = firebaseStorage
+            imageUri?.let {
+                val file = Uri.fromFile(File(it))
+                val dogImagesReference = firebaseStorage
                     .child("images")
                     .child(userId)
                     .child(file.lastPathSegment!!)
-            val data = getImageDataFromFile(imageUri!!)
+                val data = getImageDataFromFile(it)
 
-            dogImagesReference.putBytes(data)
+                dogImagesReference.putBytes(data)
                     .addOnSuccessListener {
                         syncState = DogPrediction.SyncState.SYNCED.value
                     }
@@ -102,6 +103,7 @@ class PredictionRepository @Inject constructor(private val mDatabase: Prediction
                     .addOnCompleteListener {
                         update(timestamp, syncState)
                     }
+            }
         }
     }
 

@@ -1,15 +1,21 @@
 package com.plweegie.android.telladog.camera
 
 import android.Manifest
+import android.app.AlertDialog
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.*
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.*
+import androidx.camera.core.resolutionselector.AspectRatioStrategy
+import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -43,7 +49,6 @@ import kotlin.math.min
 class CameraXFragment : Fragment(), ImageSaver.ImageSaverListener {
 
     companion object {
-        private const val REQUEST_CODE_PERMISSIONS = 10
         private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
         private const val TAG = "Camera"
 
@@ -73,6 +78,20 @@ class CameraXFragment : Fragment(), ImageSaver.ImageSaverListener {
     private lateinit var fragmentSwitchListener: FragmentSwitchListener
     private val viewModel: DogClassifierViewModel by viewModels()
 
+    private val activityResultLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        var permissionGranted = permissions
+            .filter { it.key in REQUIRED_PERMISSIONS }
+            .containsValue(true)
+
+        if (permissionGranted) {
+            setUpCamera()
+        } else {
+            showPermissionsInfoDialog()
+        }
+    }
+
     override fun onAttach(context: Context) {
         (activity?.application as MyApp).machineLearningComponent.inject(this)
         super.onAttach(context)
@@ -80,7 +99,6 @@ class CameraXFragment : Fragment(), ImageSaver.ImageSaverListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
         fragmentSwitchListener = activity as MainActivity
     }
 
@@ -107,6 +125,28 @@ class CameraXFragment : Fragment(), ImageSaver.ImageSaverListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val menuHost: MenuHost = requireActivity()
+
+        menuHost.addMenuProvider(object: MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                menuInflater.inflate(R.menu.fragment_camera, menu)
+            }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                return when (menuItem.itemId) {
+                    R.id.change_to_list -> {
+                        fragmentSwitchListener.onDogListFragmentSelect()
+                        true
+                    }
+                    R.id.save_pic_data -> {
+                        // TODO take picture
+                        true
+                    }
+                    else -> true
+                }
+            }
+        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
+
         cameraExecutor = Executors.newSingleThreadExecutor()
         fragmentScope = CoroutineScope(cameraExecutor.asCoroutineDispatcher() + fragmentJob)
 
@@ -116,48 +156,41 @@ class CameraXFragment : Fragment(), ImageSaver.ImageSaverListener {
             adapter = inferenceAdapter
         }
 
-        binding.text?.setOnClickListener {
+        binding.text.setOnClickListener {
             binding.inferenceRv.isVisible = true
         }
 
         // Request camera permissions
         if (allPermissionsGranted()) {
             // Wait for the views to be properly laid out
-            binding.cameraPreview?.post {
+            binding.cameraPreview.post {
                 // Keep track of the display in which this view is attached
-                displayId = binding.cameraPreview?.display?.displayId ?: -1
+                displayId = binding.cameraPreview.display?.displayId ?: -1
 
                 // Set up the camera and its use cases
                 setUpCamera()
             }
         } else {
-            requestPermissions(REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
+            requestCameraPermission()
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        super.onCreateOptionsMenu(menu, inflater)
-        inflater.inflate(R.menu.fragment_camera, menu)
+    private fun requestCameraPermission() {
+        activityResultLauncher.launch(REQUIRED_PERMISSIONS)
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.change_to_list -> {
-                fragmentSwitchListener.onDogListFragmentSelect()
-                true
-            }
-            R.id.save_pic_data -> {
-                // TODO take picture
-                true
-            }
-            else -> {
-                super.onOptionsItemSelected(item)
-            }
-        }
+    private fun showPermissionsInfoDialog() {
+        AlertDialog.Builder(requireContext())
+            .setTitle(R.string.request_permission_title)
+            .setMessage(R.string.request_permission)
+            .setPositiveButton(R.string.dialog_yes) { _, _ -> requestCameraPermission() }
+            .setNegativeButton(R.string.dialog_no) { _, _ -> }
+            .create()
+            .show()
     }
 
     private fun setUpCamera() {
-        binding.cameraPreview?.setOnClickListener {
+        binding.cameraPreview.setOnClickListener {
             binding.inferenceRv.isGone = true
         }
         val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
@@ -174,21 +207,25 @@ class CameraXFragment : Fragment(), ImageSaver.ImageSaverListener {
             ?: throw IllegalStateException("Camera initialization failed.")
 
         // Get screen metrics used to setup camera for full screen resolution
-        val metrics = DisplayMetrics().also { binding.cameraPreview?.display?.getRealMetrics(it) }
+        val metrics = DisplayMetrics().also { binding.cameraPreview.display?.getRealMetrics(it) }
         Log.d(TAG, "Screen metrics: ${metrics.widthPixels} x ${metrics.heightPixels}")
 
         val screenAspectRatio = aspectRatio(metrics.widthPixels, metrics.heightPixels)
         Log.d(TAG, "Preview aspect ratio: $screenAspectRatio")
 
-        val rotation = binding.cameraPreview?.display?.rotation ?: 0
+        val rotation = binding.cameraPreview.display?.rotation ?: 0
+
+        val resolutionSelector = ResolutionSelector.Builder()
+            .setAspectRatioStrategy(screenAspectRatio)
+            .build()
 
         preview = Preview.Builder()
-            .setTargetAspectRatio(screenAspectRatio)
+            .setResolutionSelector(resolutionSelector)
             .setTargetRotation(rotation)
             .build()
 
         imageAnalyzer = ImageAnalysis.Builder()
-            .setTargetAspectRatio(screenAspectRatio)
+            .setResolutionSelector(resolutionSelector)
             .setTargetRotation(rotation)
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .build()
@@ -225,7 +262,7 @@ class CameraXFragment : Fragment(), ImageSaver.ImageSaverListener {
                 preview,
                 imageAnalyzer
             )
-            preview?.setSurfaceProvider(binding.cameraPreview?.surfaceProvider)
+            preview?.setSurfaceProvider(binding.cameraPreview.surfaceProvider)
         } catch (e: IllegalStateException) {
             Log.e(TAG, "Use case binding failed. This must be running on main thread.", e)
         }
@@ -239,7 +276,7 @@ class CameraXFragment : Fragment(), ImageSaver.ImageSaverListener {
 
     private fun showText(textToShow: String) {
         activity?.runOnUiThread {
-            binding.text?.text = textToShow
+            binding.text.text = textToShow
         }
     }
 
@@ -260,14 +297,14 @@ class CameraXFragment : Fragment(), ImageSaver.ImageSaverListener {
      *  @param height - preview height
      *  @return suitable aspect ratio
      */
-    private fun aspectRatio(width: Int, height: Int): Int {
+    private fun aspectRatio(width: Int, height: Int): AspectRatioStrategy {
         val previewRatio = ln(max(width, height).toDouble() / min(width, height))
         if (abs(previewRatio - ln(RATIO_4_3_VALUE))
             <= abs(previewRatio - ln(RATIO_16_9_VALUE))
         ) {
-            return AspectRatio.RATIO_4_3
+            return AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY
         }
-        return AspectRatio.RATIO_16_9
+        return AspectRatioStrategy.RATIO_16_9_FALLBACK_AUTO_STRATEGY
     }
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {

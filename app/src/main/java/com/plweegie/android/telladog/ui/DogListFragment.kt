@@ -19,9 +19,12 @@ package com.plweegie.android.telladog.ui
 import android.content.Context
 import android.os.Bundle
 import android.view.*
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.Observer
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.GridLayoutManager
@@ -57,7 +60,6 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
 
         mFragmentSwitchListener = activity as MainActivity
 
@@ -79,6 +81,23 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val layoutManager = GridLayoutManager(activity, 1)
+        val menuHost: MenuHost = requireActivity()
+
+        menuHost.addMenuProvider(object: MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                menuInflater.inflate(R.menu.fragment_dog_list, menu)
+            }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                return when (menuItem.itemId) {
+                    R.id.change_to_camera -> {
+                        mFragmentSwitchListener.onCameraFragmentSelect()
+                        true
+                    }
+                    else -> true
+                }
+            }
+        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
 
         binding.predictionsList.apply {
             this.layoutManager = layoutManager
@@ -97,25 +116,6 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
                 }
             }
         })
-
-        setHasOptionsMenu(true)
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        super.onCreateOptionsMenu(menu, inflater)
-        inflater.inflate(R.menu.fragment_dog_list, menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.change_to_camera -> {
-                mFragmentSwitchListener.onCameraFragmentSelect()
-                true
-            }
-            else -> {
-                super.onOptionsItemSelected(item)
-            }
-        }
     }
 
     override fun onDeleteClicked(prediction: DogPrediction?) {

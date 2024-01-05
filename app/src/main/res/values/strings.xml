@@ -2,13 +2,14 @@
     <string name="app_name">TellADog</string>
     <string name="picture">Picture</string>
     <string name="description_info">Info</string>
-    <string name="request_permission">I need to access the camera for classification.</string>
+    <string name="request_permission_title">May we use the camera?</string>
+    <string name="request_permission">We need to access the camera for classification.</string>
     <string name="camera_error">This device doesn\'t support Camera2 API.</string>
     <string name="toggle_turn_on">NN:On</string>
     <string name="toggle_turn_off">NN:Off</string>
     <string name="toggle">Use NNAPI</string>
-    <string name="no_dogs_here">Not seeing any dogs...</string>
-    <string name="wait_download">Downloading machine learning model, we\'ll take you to the camera as soon as we\'re done</string>
+    <string name="no_dogs_here">Not seeing any dogs…</string>
+    <string name="wait_download">Downloading machine learning model, just a moment…</string>
 
     <!-- Menus -->
     <string name="change_to_camera">Predict in live preview</string>

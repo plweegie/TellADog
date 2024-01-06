@@ -46,7 +46,7 @@ class MainActivity : AppCompatActivity(), FragmentSwitchListener {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        (application as MyApp).machineLearningComponent.inject(this)
+        (application as MyApp).myAppComponent.inject(this)
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -136,7 +136,6 @@ class MainActivity : AppCompatActivity(), FragmentSwitchListener {
     }
 
     companion object {
-        private const val SIGNIN_REQUEST_CODE = 2
         const val ORIENTATION_PREFERENCE = "orientation_pref"
     }
 }

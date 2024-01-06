@@ -54,7 +54,7 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
     private var userId: String? = null
 
     override fun onAttach(context: Context) {
-        (activity?.application as MyApp).mAppComponent.inject(this)
+        (activity?.application as MyApp).myAppComponent.inject(this)
         super.onAttach(context)
     }
 
@@ -156,7 +156,6 @@ class DogListFragment : Fragment(), PhotoGridAdapter.PhotoGridListener, Firebase
     }
 
     companion object {
-        const val TAG = "DogListFragment"
         const val FIREBASE_SYNC_PREFERENCE = "firebase_sync_preference"
 
         private const val USER_ID_ARG = "user_id_arg"

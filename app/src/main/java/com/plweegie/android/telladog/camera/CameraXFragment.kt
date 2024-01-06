@@ -5,14 +5,19 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.DisplayMetrics
+import android.os.Environment
 import android.util.Log
-import android.view.*
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.camera.core.*
-import androidx.camera.core.resolutionselector.AspectRatioStrategy
-import androidx.camera.core.resolutionselector.ResolutionSelector
-import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
+import androidx.camera.view.LifecycleCameraController
 import androidx.core.content.ContextCompat
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
@@ -23,6 +28,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.mlkit.vision.label.custom.CustomImageLabelerOptions
 import com.plweegie.android.telladog.MainActivity
@@ -31,29 +37,25 @@ import com.plweegie.android.telladog.R
 import com.plweegie.android.telladog.adapters.InferenceAdapter
 import com.plweegie.android.telladog.classifier.DogAnalyzer
 import com.plweegie.android.telladog.classifier.DogClassifierViewModel
+import com.plweegie.android.telladog.data.DogPrediction
+import com.plweegie.android.telladog.data.PredictionRepository
 import com.plweegie.android.telladog.databinding.FragmentCameraBinding
 import com.plweegie.android.telladog.ui.FragmentSwitchListener
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import javax.inject.Inject
-import kotlin.math.abs
-import kotlin.math.ln
-import kotlin.math.max
-import kotlin.math.min
 
 
-class CameraXFragment : Fragment(), ImageSaver.ImageSaverListener {
+class CameraXFragment : Fragment() {
 
     companion object {
         private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
         private const val TAG = "Camera"
-
-        private const val RATIO_4_3_VALUE = 4.0 / 3.0
-        private const val RATIO_16_9_VALUE = 16.0 / 9.0
 
         @JvmStatic
         fun newInstance() = CameraXFragment()
@@ -62,16 +64,16 @@ class CameraXFragment : Fragment(), ImageSaver.ImageSaverListener {
     @Inject
     lateinit var imageLabelerOptions: CustomImageLabelerOptions
 
+    @Inject
+    lateinit var predictionRepository: PredictionRepository
+
+    private var imageUrl = ""
     private var displayId: Int = -1
-    private var cameraProvider: ProcessCameraProvider? = null
-    private var preview: Preview? = null
-    private var imageCapture: ImageCapture? = null
-    private var imageAnalyzer: ImageAnalysis? = null
-    private var camera: Camera? = null
+    private var cameraController: LifecycleCameraController? = null
 
     private lateinit var cameraExecutor: ExecutorService
-    private lateinit var fragmentScope: CoroutineScope
-    private val fragmentJob = Job()
+
+    private var topPrediction: Pair<String, Float>? = null
 
     private lateinit var inferenceAdapter: InferenceAdapter
     private lateinit var binding: FragmentCameraBinding
@@ -81,7 +83,7 @@ class CameraXFragment : Fragment(), ImageSaver.ImageSaverListener {
     private val activityResultLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        var permissionGranted = permissions
+        val permissionGranted = permissions
             .filter { it.key in REQUIRED_PERMISSIONS }
             .containsValue(true)
 
@@ -93,7 +95,7 @@ class CameraXFragment : Fragment(), ImageSaver.ImageSaverListener {
     }
 
     override fun onAttach(context: Context) {
-        (activity?.application as MyApp).machineLearningComponent.inject(this)
+        (activity?.application as MyApp).myAppComponent.inject(this)
         super.onAttach(context)
     }
 
@@ -118,7 +120,6 @@ class CameraXFragment : Fragment(), ImageSaver.ImageSaverListener {
     override fun onDestroyView() {
         super.onDestroyView()
 
-        fragmentJob.cancel()
         cameraExecutor.shutdown()
     }
 
@@ -139,7 +140,8 @@ class CameraXFragment : Fragment(), ImageSaver.ImageSaverListener {
                         true
                     }
                     R.id.save_pic_data -> {
-                        // TODO take picture
+                        binding.savingProgressBar.isVisible = true
+                        takePicture()
                         true
                     }
                     else -> true
@@ -148,7 +150,6 @@ class CameraXFragment : Fragment(), ImageSaver.ImageSaverListener {
         }, viewLifecycleOwner, Lifecycle.State.RESUMED)
 
         cameraExecutor = Executors.newSingleThreadExecutor()
-        fragmentScope = CoroutineScope(cameraExecutor.asCoroutineDispatcher() + fragmentJob)
 
         binding.inferenceRv.apply {
             layoutManager = LinearLayoutManager(activity)
@@ -193,48 +194,25 @@ class CameraXFragment : Fragment(), ImageSaver.ImageSaverListener {
         binding.cameraPreview.setOnClickListener {
             binding.inferenceRv.isGone = true
         }
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
-        cameraProviderFuture.addListener({
 
-            // CameraProvider
-            cameraProvider = cameraProviderFuture.get()
-            bindCameraUseCases()
-        }, ContextCompat.getMainExecutor(requireContext()))
-    }
+        cameraController = LifecycleCameraController(requireContext()).apply {
+            imageAnalysisBackpressureStrategy = ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST
+            imageCaptureIoExecutor = cameraExecutor
 
-    private fun bindCameraUseCases() {
-        val localCameraProvider = cameraProvider
-            ?: throw IllegalStateException("Camera initialization failed.")
-
-        // Get screen metrics used to setup camera for full screen resolution
-        val metrics = DisplayMetrics().also { binding.cameraPreview.display?.getRealMetrics(it) }
-        Log.d(TAG, "Screen metrics: ${metrics.widthPixels} x ${metrics.heightPixels}")
-
-        val screenAspectRatio = aspectRatio(metrics.widthPixels, metrics.heightPixels)
-        Log.d(TAG, "Preview aspect ratio: $screenAspectRatio")
-
-        val rotation = binding.cameraPreview.display?.rotation ?: 0
-
-        val resolutionSelector = ResolutionSelector.Builder()
-            .setAspectRatioStrategy(screenAspectRatio)
-            .build()
-
-        preview = Preview.Builder()
-            .setResolutionSelector(resolutionSelector)
-            .setTargetRotation(rotation)
-            .build()
-
-        imageAnalyzer = ImageAnalysis.Builder()
-            .setResolutionSelector(resolutionSelector)
-            .setTargetRotation(rotation)
-            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-            .build()
-            .also {
-                it.setAnalyzer(
-                    cameraExecutor,
-                    DogAnalyzer(requireContext(), viewModel.results, imageLabelerOptions, lifecycle)
+            setImageAnalysisAnalyzer(
+                cameraExecutor,
+                DogAnalyzer(
+                    requireContext(),
+                    viewModel.results,
+                    imageLabelerOptions,
+                    lifecycle
                 )
-            }
+            )
+
+            bindToLifecycle(viewLifecycleOwner)
+        }
+
+        binding.cameraPreview.controller = cameraController
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -245,33 +223,59 @@ class CameraXFragment : Fragment(), ImageSaver.ImageSaverListener {
                         showText(it.first().first)
                     }
 
+                    topPrediction = it.firstOrNull()
+
                     updateAdapterAsync(it)
                 }
             }
         }
-
-        val cameraSelector =
-            CameraSelector.Builder().requireLensFacing(CameraSelector.LENS_FACING_BACK).build()
-
-        try {
-            localCameraProvider.unbindAll()
-
-            camera = localCameraProvider.bindToLifecycle(
-                this,
-                cameraSelector,
-                preview,
-                imageAnalyzer
-            )
-            preview?.setSurfaceProvider(binding.cameraPreview.surfaceProvider)
-        } catch (e: IllegalStateException) {
-            Log.e(TAG, "Use case binding failed. This must be running on main thread.", e)
-        }
     }
 
-    override fun onImageSaved() {
-        activity?.runOnUiThread {
-            fragmentSwitchListener.onDogListFragmentSelect()
-        }
+    private fun takePicture() {
+        val outputFileOptions = ImageCapture.OutputFileOptions.Builder(createImageFile())
+            .build()
+
+        val sensorRotation = cameraController?.cameraInfo?.sensorRotationDegrees ?: 0
+
+        PreferenceManager.getDefaultSharedPreferences(requireActivity())
+            .edit()
+            .putInt(MainActivity.ORIENTATION_PREFERENCE, sensorRotation)
+            .apply()
+
+        if (topPrediction == null) return
+
+        cameraController?.takePicture(outputFileOptions, cameraExecutor, object : ImageCapture.OnImageSavedCallback {
+            override fun onError(exception: ImageCaptureException) {
+                Log.e(TAG, "Error saving image")
+            }
+
+            override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
+                val predictionToSave = DogPrediction(
+                    topPrediction?.first,
+                    topPrediction?.second,
+                    imageUrl,
+                    Date().time
+                )
+
+                predictionRepository.add(predictionToSave)
+
+                activity?.runOnUiThread {
+                    binding.savingProgressBar.isVisible = false
+                    fragmentSwitchListener.onDogListFragmentSelect()
+                }
+            }
+        })
+    }
+
+    private fun createImageFile(): File {
+        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.UK).format(Date())
+        val filename = "PREDICTION_${timestamp}_"
+        val storageDir = requireContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+
+        val image = File(storageDir, filename)
+        imageUrl = image.absolutePath
+
+        return image
     }
 
     private fun showText(textToShow: String) {
@@ -284,27 +288,6 @@ class CameraXFragment : Fragment(), ImageSaver.ImageSaverListener {
         activity?.runOnUiThread {
             inferenceAdapter.setPredictions(predictions)
         }
-    }
-
-    /**
-     *  [androidx.camera.core.ImageAnalysisConfig] requires enum value of
-     *  [androidx.camera.core.AspectRatio]. Currently it has values of 4:3 & 16:9.
-     *
-     *  Detecting the most suitable ratio for dimensions provided in @params by comparing absolute
-     *  of preview ratio to one of the provided values.
-     *
-     *  @param width - preview width
-     *  @param height - preview height
-     *  @return suitable aspect ratio
-     */
-    private fun aspectRatio(width: Int, height: Int): AspectRatioStrategy {
-        val previewRatio = ln(max(width, height).toDouble() / min(width, height))
-        if (abs(previewRatio - ln(RATIO_4_3_VALUE))
-            <= abs(previewRatio - ln(RATIO_16_9_VALUE))
-        ) {
-            return AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY
-        }
-        return AspectRatioStrategy.RATIO_16_9_FALLBACK_AUTO_STRATEGY
     }
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {

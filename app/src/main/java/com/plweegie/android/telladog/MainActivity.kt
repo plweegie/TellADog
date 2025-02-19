@@ -4,11 +4,15 @@ import android.app.Activity
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -60,6 +64,18 @@ class MainActivity : AppCompatActivity(), FragmentSwitchListener {
 
         setContentView(binding.root)
         setSupportActionBar(binding.mainToolbar)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            ViewCompat.setOnApplyWindowInsetsListener(binding.mainToolbar) { v, insets ->
+                val viewInsets = insets.getInsets(WindowInsetsCompat.Type.statusBars())
+
+                v.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                    topMargin = viewInsets.top
+                }
+
+                WindowInsetsCompat.CONSUMED
+            }
+        }
 
         currentUser = FirebaseAuth.getInstance().currentUser
         if (currentUser == null) {

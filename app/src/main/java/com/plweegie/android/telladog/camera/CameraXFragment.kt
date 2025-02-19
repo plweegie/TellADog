@@ -49,6 +49,7 @@ import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import javax.inject.Inject
+import androidx.core.content.edit
 
 
 class CameraXFragment : Fragment() {
@@ -238,9 +239,9 @@ class CameraXFragment : Fragment() {
         val sensorRotation = cameraController?.cameraInfo?.sensorRotationDegrees ?: 0
 
         PreferenceManager.getDefaultSharedPreferences(requireActivity())
-            .edit()
-            .putInt(MainActivity.ORIENTATION_PREFERENCE, sensorRotation)
-            .apply()
+            .edit() {
+                putInt(MainActivity.ORIENTATION_PREFERENCE, sensorRotation)
+            }
 
         if (topPrediction == null) return
 

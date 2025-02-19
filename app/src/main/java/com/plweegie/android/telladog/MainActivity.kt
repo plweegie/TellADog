@@ -55,11 +55,9 @@ class MainActivity : AppCompatActivity(), FragmentSwitchListener {
 
         binding = ActivityMainBinding.inflate(layoutInflater)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            window.apply {
-                decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
-                statusBarColor = ContextCompat.getColor(this@MainActivity, R.color.colorToolbar)
-            }
+        window.apply {
+            decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+            statusBarColor = ContextCompat.getColor(this@MainActivity, R.color.colorToolbar)
         }
 
         setContentView(binding.root)
